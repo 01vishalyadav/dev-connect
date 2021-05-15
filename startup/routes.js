@@ -1,6 +1,7 @@
 const express = require('express');
 const users = require('../routes/users');
 const authentication = require('../routes/authentication');
+
 // const error = require('../middlewares/error');
 
 module.exports = function(app) {

@@ -1,9 +1,9 @@
-// const auth = require('../middleware/authorization');
+const authorization = require('../middlewares/authorization');
+const Joi = require('joi');
 const jwt = require('jsonwebtoken');
 const config = require('config');
 const bcrypt = require('bcrypt');
-const {User, validate} = require('../models/user');
-// const mongoose = require('mongoose');
+const {User, validate, validateNonRequiredProperties} = require('../models/user');
 const express = require('express');
 const router = express.Router();
 
@@ -11,7 +11,6 @@ const router = express.Router();
 router.get('/', (req,res)=>{
   res.send("Hello: I am working!");
 });
-
 
 /////////////////// register a user//////////////////
 router.post('/', async(req,res) => {
@@ -40,11 +39,62 @@ router.post('/', async(req,res) => {
 });
 
 
-//////////////////// login a user///////////////
+//////////////////// get info about myself(user)///////////////
+// make sure that request header contains auth token
+router.get('/me', authorization, async(req,res)=>{
+  const user = await User.findById(req.user._id).select('-password');
+  res.send(user);
+})
 
+//////////  update a user details  //////////// 
+// supported update (githubId, linkedinId, lastname)
+router.put('/me', authorization, async(req,res)=>{
+  let user = {
+    githubId:null,
+    linkedinId:null,
+    lastName:null,
+  }
+  if(req.body.hasOwnProperty('githubId')){
+    // check if this githubId already exist in db
+    if( await User.findOne({githubId:req.body.githubId})){
+      return res.status(400).send('githubId already registered.');
+    }
+    user.githubId = req.body.githubId;
+  }
+  if(req.body.hasOwnProperty('linkedinId')){
+    if( await User.findOne({linkedinId:req.body.linkedinId})){
+      return res.status(400).send('linkedinId already registered.');
+    }
+    user.linkedinId = req.body.linkedinId;
+  }
+  if(req.body.hasOwnProperty('lastName')){
+    user.lastName = req.body.lastName;
+  }
+  // check if user object is still valid
+  const { error } = validateNonRequiredProperties(user);
+  if(error) return res.status(400).send(error.details[0].message);
+  // user object is valid, now update the database
+  await User.findByIdAndUpdate(req.user._id, {$set:
+    {
+      githubId: user.githubId,
+      linkedinId: user.linkedinId,
+      lastName: user.lastName,
+    }
+  }, {new:true}, (err,updatedDoc) =>{
+    if(err){
+      return res.status(400).send('Invalid request');
+    }
+    res.send(user);
+  });
+});
 
-// update a user details
+////////////  delete a user  ///////////
+router.delete('/me', authorization, (req,res) => {
+  User.findByIdAndDelete(req.user._id, (err,doc) => {
+    if(err) return res.status(404).send('Could not perform delete');
+    res.send('deleted successfully');
+  });
+});
 
-// delete a user
 
 module.exports = router;

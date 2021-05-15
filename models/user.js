@@ -72,11 +72,20 @@ function validateUser(user) {
     lastName: Joi.string().min(3).max(50),
     email: Joi.string().min(5).max(255).required().email(),
     password: Joi.string().min(4).max(255).required(),
-    githubId: Joi.string().min(2).max(50),
-    linkedinId: Joi.string().min(2).max(50),
+    githubId: Joi.string().min(2).max(50).allow(null),
+    linkedinId: Joi.string().allow(null).min(2).max(50),
   });
   return schema.validate(user);
 }
 
+function validateNonRequiredProperties(user){
+  const schema = Joi.object({
+    lastName: Joi.string().allow(null).min(3).max(50),
+    githubId: Joi.string().allow(null).min(2).max(50),
+    linkedinId: Joi.string().allow(null).min(2).max(50),
+  });
+  return schema.validate(user);
+}
 exports.User = User;
 exports.validate = validateUser;
+exports.validateNonRequiredProperties = validateNonRequiredProperties;
