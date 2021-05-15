@@ -33,13 +33,13 @@ const userSchema = new mongoose.Schema({
     type: String,
     minlength: 2,
     maxlength: 50,
-    unique: true
+    default: null,
   },
   linkedinId: {
     type: String,
     minlength: 2,
     maxlength: 50,
-    unique: true
+    default: null,
   },
   privateProperties: {
     type: [String]
