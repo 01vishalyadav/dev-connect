@@ -1,0 +1,22 @@
+{
+  "name": "dev-connect",
+  "version": "0.1.0",
+  "description": "backed for dev-connect",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Vishal Yadav",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.0.1",
+    "config": "^3.3.6",
+    "express": "^4.17.1",
+    "http": "0.0.1-security",
+    "joi": "^17.4.0",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^5.12.9",
+    "socket.io": "^4.1.1",
+    "winston": "^3.3.3"
+  }
+}
