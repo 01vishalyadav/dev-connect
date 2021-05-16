@@ -6,7 +6,6 @@ const authorization = require('../middlewares/authorization');
 const router = express.Router();
 
 // get a conversation
-// check if a user is authorized
 router.get('/:conversationId', authorization, async(req,res)=>{
   // user is a registered user
   // now check if this user is a participant in the conversation
@@ -24,7 +23,13 @@ router.get('/:conversationId', authorization, async(req,res)=>{
 ////////////  get all conversations  //////////////
 router.get('/', authorization, async(req,res)=>{
   // return all conversations in which this user is paritcipated
-  
+  Conversation.find(
+    {participants: req.user._id},
+    (err,docs)=>{
+      if(err) return res.status(400).send('error serching conversations');
+      res.send(docs);
+    }
+  );
 });
 
 /////////// create a new conversation  /////////////
@@ -33,10 +38,10 @@ router.post('/', authorization, async(req,res)=>{
   // requires friendUserId in the req.body.friendUserId
   // check if friendUserId is a friend of this user (req.user._id)
   let user = await User.findById(req.user._id);
-  if (user.friends.indexOf(req.body.friendUserId) == -1)  return res.status(400).send('not your friend');
+  if (user.friends.indexOf(req.body.friendUserId) == -1)  return res.status(400).send('not your friend or invalid friendUserId');
   // if your friend, create a conversation
   let conversation = new Conversation({
-    participants: [req.user_id, friendUserId],
+    participants: [req.user._id, req.body.friendUserId],
   });
   conversation = await conversation.save();
   // return conversation
