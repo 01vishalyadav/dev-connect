@@ -59,7 +59,6 @@ const userSchema = new mongoose.Schema({
   friends: {
     type: [ObjectId],
   }
-
 });
 
 const User = mongoose.model('User', userSchema);
@@ -70,6 +69,7 @@ userSchema.methods.generateAuthToken = function() {
 }
 
 function validateUser(user) {
+  console.log(user.firstName);
   const schema = Joi.object({
     firstName: Joi.string().min(3).max(50).required(),
     lastName: Joi.string().min(3).max(50),

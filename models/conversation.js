@@ -8,6 +8,11 @@ const conversationSchema = new mongoose.Schema({
       type:ObjectId,
     }
   ],
+  lastActive: {
+    type:Date,
+    default: Date.now,
+    required: true,
+  }
 });
 
 const Conversation = mongoose.model('Conversation', conversationSchema);
