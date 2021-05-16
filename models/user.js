@@ -56,6 +56,9 @@ const userSchema = new mongoose.Schema({
   blockedUsers: {
     type: [ObjectId],
   },
+  friends: {
+    type: [ObjectId],
+  }
 
 });
 
