@@ -2,7 +2,6 @@ const express = require('express');
 const {Conversation} = require('../models/conversation');
 const {User} = require('../models/user');
 const authorization = require('../middlewares/authorization');
-
 const router = express.Router();
 
 // get a conversation
@@ -33,9 +32,15 @@ router.get('/', authorization, async(req,res)=>{
 });
 
 /////////// create a new conversation  /////////////
+
+// create a function to create new conversation so that we can
+// reuse it in socketIO folder
+
+
+
 // request for it when a new message is sent from a user for the first time to his/her friend
 router.post('/', authorization, async(req,res)=>{
-  // requires friendUserId in the req.body.friendUserId
+  // requires friendUserId in the req.body.friendUserId and your user id in req.user._id
   // check if friendUserId is a friend of this user (req.user._id)
   let user = await User.findById(req.user._id);
   if (user.friends.indexOf(req.body.friendUserId) == -1)  return res.status(400).send('not your friend or invalid friendUserId');
@@ -47,5 +52,6 @@ router.post('/', authorization, async(req,res)=>{
   // return conversation
   res.send(conversation);
 })
+
 
 module.exports = router;
