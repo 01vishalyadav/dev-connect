@@ -1,1 +1,13 @@
+# Server Node Modules
 node_modules
+#Server production
+/build
+
+# Client Node Modules
+client/node_modules
+
+# Client testing
+client/coverage
+
+# Client production
+client/build

@@ -4,6 +4,8 @@
   "description": "backed for dev-connect",
   "main": "server.js",
   "scripts": {
+    "start": "node server.js",
+    "build": "cd client && npm install && npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Vishal Yadav",

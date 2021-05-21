@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Socket.io simple chat</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="container">
+
+      <input type="text" id="myUserId" placeholder="Your userId">
+      <button id="setConnectedButton"> Set me as connected</button>
+      <br>
+      <br>
+
+
+
+
+
+      <input type="text" id="sendToId" placeholder="userId of receiver">
+      <input type="text" id='message' placeholder="message to send">
+      <input type="text", id="conversationId" placeholder="conversationId">
+      <button id="sendButton" >Send This Message</button>
+      <br>
+      <br>
+
+
+
+
+      <div id="newMessageContainer">
+        <ul id="newMessagesList">
+
+        </ul>
+
+      </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="main.js"></script>
+  </body>
+</html>
