@@ -58,7 +58,14 @@ const userSchema = new mongoose.Schema({
   },
   friends: {
     type: [ObjectId],
-  }
+  },
+  isConnected: {
+    type: Boolean,
+    default: false,
+  },
+  socketId: {
+    type: String,
+  },
 });
 
 const User = mongoose.model('User', userSchema);
