@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const cors = require('cors');
 const path = require('path');
+const config = requier('config');
 const socketio = require('socket.io');
 const handleMessagingEvents = require('./socketIO/mainEventHandler');
 
@@ -15,7 +16,7 @@ const io = socketio(server, {
   }
 });
 // Static files
-app.use(express.static(path.resolve(__dirname, '../client/src')));
+app.use(express.static(path.resolve(__dirname, `${config.get('staticFilePath')}`)));
 // set io to use it in any router, using req.app.get('io')
 app.set('io', io);
 
