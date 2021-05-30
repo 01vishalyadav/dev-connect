@@ -37,7 +37,7 @@ app.set('io', io);
 // })
 
 app.get('/*', function (req, res) {
-  res.sendFile(path.join(__dirname,'client', 'build', 'index.html'));
+  res.sendFile(path.resolve(__dirname,config.get('staticFilePath'), 'index.html'));
 });
 
 require('./startup/routes')(app);

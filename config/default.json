@@ -1,5 +1,5 @@
 {
-  "staticFilePath":"../client/src",
+  "staticFilePath":"./client/src",
   "jwtPrivateKey": "developmentPrivateKey",
   "db":{
     "user":"",
