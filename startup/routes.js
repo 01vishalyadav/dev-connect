@@ -3,9 +3,7 @@ const cors = require('cors');
 const bodyparser = require('body-parser');
 const users = require('../routes/users');
 const conversations = require('../routes/conversations');
-const messages = require('../routes/messages');
 const authentication = require('../routes/authentication');
-
 // const error = require('../middlewares/error');
 
 module.exports = function(app) {
