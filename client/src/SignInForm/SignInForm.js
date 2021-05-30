@@ -1,4 +1,8 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
+import validator from 'validator';
+import axios from 'axios';
+
+import Alert from '@material-ui/lab/Alert';
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -12,7 +16,9 @@ import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
-import validator from 'validator';
+import FormHelperText from '@material-ui/core/FormHelperText';
+import Snackbar from '@material-ui/core/Snackbar';
+import MuiAlert from '@material-ui/lab/Alert';
 
 function Copyright() {
   return (
@@ -53,6 +59,20 @@ export default function SignIn(props) {
   const [errorInEmail, setErrorInEmail] = useState(false);
   const [password, setPassword] = useState('');
   const [errorInPassword, setErrorInPassword] = useState(false);
+  const [isSignedIn, setIsSignedIn] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+
+  useEffect(()=>{
+    if(isSignedIn){
+      props.signInCompleted();
+    }
+  });
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setSnackbarOpen(false);
+  };
 
   function signInButtonClickedHandler(e){
     e.preventDefault();
@@ -65,12 +85,28 @@ export default function SignIn(props) {
       }
       return;
     }
-    // send request to API
-    // store response of API, if successfull response
-    // send Response back to App.js
+    // create a user Object based on input by user
+    const user = {
+      email: email,
+      password: password,
+    }
+    // send request to API for authentication of this user
+    axios.post('/api/users/authentication', user)
+      .then(res => {
+        // send token to App.js that I am singedIn
+        localStorage.setItem('x-auth-token',res.data);
+        setIsSignedIn(true);
+      }).catch( (err)=>{
+        console.log("axios err:", err);
+        console.log("err.res.data:",err.response.data);
+        // show error that could not signedIn
 
-    // assume user registered
-    props.signInComplete();
+        setSnackbarOpen(true);
+        setErrorInEmail(true);
+        setErrorInPassword(true);
+
+      });
+      // show error that could not signedIn
   }
   function emailChangedHandler(e){
     if(validator.isEmail(e.target.value) )  setErrorInEmail(false);
@@ -86,8 +122,23 @@ export default function SignIn(props) {
     setPassword(e.target.value);
   }
 
+  function dontHaveAccountClickedHandler(e) {
+    e.preventDefault();
+    props.dontHaveAccountClicked();
+  }
+
   return (
     <Container component="main" maxWidth="xs">
+      <Snackbar 
+        open={snackbarOpen} 
+        autoHideDuration={6000} 
+        onClose={handleSnackbarClose} 
+        anchorOrigin={{vertical:'top',horizontal:'center'}}>
+        <Alert onClose={handleSnackbarClose} 
+          severity="error">
+          Email or Password is incorrect
+        </Alert>
+      </Snackbar>
       <CssBaseline />
       <div className={classes.paper}>
         <Avatar className={classes.avatar}>
@@ -137,12 +188,12 @@ export default function SignIn(props) {
           </Button>
           <Grid container>
             <Grid item xs>
-              <Link href="#" variant="body2">
+              <Link variant="body2">
                 Forgot password?
               </Link>
             </Grid>
             <Grid item>
-              <Link href="#" variant="body2" onClick={(e)=>props.dontHaveAccountClick(e)}>
+              <Link variant="body2" onClick={(e)=>dontHaveAccountClickedHandler(e)}>
                 {"Don't have an account? Sign Up"}
               </Link>
             </Grid>
