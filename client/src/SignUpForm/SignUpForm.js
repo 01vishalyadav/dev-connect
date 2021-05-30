@@ -1,4 +1,7 @@
 import React, {useState} from 'react';
+import validator from 'validator';
+import axios from 'axios';
+
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -12,8 +15,7 @@ import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
-import validator from 'validator';
-import axios from 'axios';
+
 
 
 function Copyright() {
@@ -52,19 +54,20 @@ const useStyles = makeStyles((theme) => ({
 
 export default function SignUp(props) {
   const classes = useStyles();
-  
   const [isSignedUp, setIsSignedUp] = useState(false);
-
   const [email, setEmail] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [password, setPassword] = useState('');
-
   const [errorInFirstName, setErrorInFirstName] = useState(false);
   const [errorInLastName, setErrorInLastName] = useState(false);
   const [errorInEmail, setErrorInEmail] = useState(false);
   const [errorInPassword, setErrorInPassword] = useState(false);
+  const [alreadyHaveAccount, setAlreadyHaveAccount] = useState(false);
 
+  function signUpComplete() {
+    props.signUpCompleted();
+  }
 
   function signUpButtonClickedHandler(e){
     e.preventDefault();
@@ -89,13 +92,19 @@ export default function SignUp(props) {
     // send request to API
     axios.post('/api/users', user)
       .then(res => {
-        console.log(res);
-      }).catch(err=>{console.log(err)});
-    // store response of API, if successfull response
-    // send Response back to App.js
+        // show response on console, only for help
+        console.log(res.data);
+        // send token to App.js
+        localStorage.setItem('x-auth-token', res.headers['x-auth-token']);
+        signUpComplete();
 
-    // assume user registered
-    props.signUpComplete();
+      }).catch( (err)=>{
+
+        console.log("could not signUp, axios err:", err);
+        
+        // show error that could not signedUp
+      });
+      // show error that could not signedUp
   }
   
   function firstNameChangedHandler(e){
@@ -124,7 +133,11 @@ export default function SignUp(props) {
     setPassword(e.target.value);
   }
 
-  
+  function alreadyHaveAccountClickedHandler(e){
+    e.preventDefault();
+    props.haveAccountClicked();
+  }
+
   return (
     <Container component="main" maxWidth="xs">
       <CssBaseline />
@@ -204,7 +217,7 @@ export default function SignUp(props) {
           </Button>
           <Grid container justify="flex-end">
             <Grid item>
-              <Link href="#" variant="body2" onClick={(e)=>props.haveAccountClick(e)}>
+              <Link variant="body2" onClick={(e)=>alreadyHaveAccountClickedHandler(e)}>
                 Already have an account? Sign in
               </Link>
             </Grid>
