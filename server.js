@@ -36,8 +36,8 @@ app.set('io', io);
 // })
 
 require('./startup/routes')(app);
-require('./startup/db')();
-require('./startup/config')();
+require('./startup/db')(app);
+require('./startup/config')(app);
 // app.get('*', (req, res) => {
 //   res.sendFile(path.resolve(__dirname, './client/src', 'index.js'));
 // });
