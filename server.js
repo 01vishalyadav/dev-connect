@@ -2,7 +2,7 @@ const express = require('express');
 const http = require('http');
 const cors = require('cors');
 const path = require('path');
-const config = requier('config');
+const config = require('config');
 const socketio = require('socket.io');
 const handleMessagingEvents = require('./socketIO/mainEventHandler');
 
@@ -35,6 +35,10 @@ app.set('io', io);
   // console.log('io authorized');
   // next();
 // })
+
+app.get('/*', function (req, res) {
+  res.sendFile(path.join(__dirname,'client', 'build', 'index.html'));
+});
 
 require('./startup/routes')(app);
 require('./startup/db')(app);
