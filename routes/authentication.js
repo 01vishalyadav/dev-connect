@@ -7,6 +7,8 @@ const express = require('express');
 const { User } = require('../models/user');
 const router = express.Router();
 
+//api/users/authentication
+/////////////authentication////////////////
 router.post('/', async(req,res) => {
   const { error } = validate(req.body);
   if(error) return res.status(400).send(error.details[0].message);
@@ -15,7 +17,7 @@ router.post('/', async(req,res) => {
   let user = await User.findOne({email: req.body.email});
   if(!user) return res.status(400).send('Invalid email or password');
   // check if valid password is provided
-  const isValidPassword = bcrypt.compare(req.body.password, user.password);
+  const isValidPassword = await bcrypt.compare(req.body.password, user.password);
   if(!isValidPassword)  return res.status(400).send('Invalid email or password');
   const token = jwt.sign({_id:user._id}, config.get('jwtPrivateKey'));
   res.send(token);

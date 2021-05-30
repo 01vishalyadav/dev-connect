@@ -1,4 +1,3 @@
-
 const express = require('express');
 const http = require('http');
 const cors = require('cors');
@@ -15,7 +14,6 @@ const io = socketio(server, {
     methods: ['GET', 'POST'],
   }
 });
-app.use(cors());
 // Static files
 app.use(express.static(path.resolve(__dirname, '../client/src')));
 // set io to use it in any router, using req.app.get('io')
@@ -40,9 +38,9 @@ app.set('io', io);
 require('./startup/routes')(app);
 require('./startup/db')();
 require('./startup/config')();
-app.get('*', (req, res) => {
-  res.sendFile(path.resolve(__dirname, './client/src', 'index.js'));
-});
+// app.get('*', (req, res) => {
+//   res.sendFile(path.resolve(__dirname, './client/src', 'index.js'));
+// });
 
 // handle messaging events
 handleMessagingEvents(io);
