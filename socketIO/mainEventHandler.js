@@ -37,23 +37,61 @@ module.exports = function(io){
     });
 
     // handle new message
-    socket.on('newMessage', async (dataObject) => {
+    socket.on('newMessage', async (dataObject, callback) => {
       // userId already verified at authoriazion time of io connection
       // const userId = socket.user._id
       const userId = socket.userId;//change it to upper row for security
       const sendToUserId = dataObject.sendTo;
       // check if conversation with conversationId has userId and sendToUserId as participants
       const conversationId = dataObject.conversationId;// check it if it is a type of obectId
-      if(!conversationId) return console.log('conversationId is not set in client dataObect');
+
+      ///if you want to chat with a new user, firstly, create a conversation by making request and then use that conversationId here
+      if(!conversationId){
+        dataToSendToClient={
+          success: false,
+          error: {
+            code: 'CONV_ID_NOT_SET',
+             message:'conversationId is not set in client dataObect'
+            }
+        }
+        callback(dataToSendToClient);
+        return console.log('conversationId is not set in client dataObect');
+      }
       if(!mongoose.Types.ObjectId.isValid(conversationId)){
+        dataToSendToClient={
+          success: false,
+          error: {
+            code: 'CONV_ID_NOT_OBJECTID',
+             message:'conversationId is not a objectId type'
+            }
+        }
+        callback(dataToSendToClient);
         return console.log('conversationId is not a objectId type');
       }
       
       const conversation = await Conversation.findById(conversationId, (err, conv)=> {
-        if(err) return console.log('err in searching conversation, err:', err);
+        if(err) {
+          const dataToSendToClient={
+            success: false,
+            error: {
+              code: 'SEARCH_CONV_ERR',
+               message:'err in searching conversation'
+              }
+          }
+          callback(dataToSendToClient);
+          return console.log('err in searching conversation, err:', err);
+        }
       });
 
       if(!conversation){
+        const dataToSendToClient={
+          success: false,
+          error: {
+            code: 'CONV_DOES_NOT_EXIST',
+             message:'conversation does not exist'
+            }
+        }
+        callback(dataToSendToClient);
         return console.log('conversation does not exist');
       }
       //now, conversation exist
@@ -62,24 +100,49 @@ module.exports = function(io){
       const participants = conversation.participants;
       // only valid for 121 conversation right now
       if(!((participants[0]==userId && participants[1]==sendToUserId) || (participants[0]==sendToUserId && participants[1]==userId))) {
+        const dataToSendToClient={
+          success: false,
+          error: {
+            code: 'NOT_A_PARTICIPANT',
+             message:'There is no such conversation for you'
+            }
+        }
+        callback(dataToSendToClient);
         return console.log('mainEventHandler: There is no such conversation for you');
       }
       
       // if sendToUserId is connected
       User.findById(sendToUserId, async (err, sendToUser)=>{
-        if(err) return console.log('error finding user', err);
-        if(sendToUser.isConnected){
-          console.log('sendToUser is also connected');
-          console.log(`sending to socketId: ${sendToUser.socketId}`);
-          io.to(sendToUser.socketId).emit('gotNewMessage',
-            {
-              from: socket.userId,
-              message:dataObject.message,
-            });
+        if(err) {
+          const dataToSendToClient={
+            success: false,
+            error: {
+              code: 'ERR_FINDING_OTHER_USER',
+               message:'error finding user'
+              }
+          }
+          callback(dataToSendToClient);
+          return console.log('error finding user', err);
         }
-        else{
-          console.log('sendToUser is not connected right now');
-        }
+        // commented it because, on front end I need messageId to create
+        // new MessageItem, so I need to save It to db first
+        // In future, I have to do it without the help of db,
+        // but for now, I am using db generated message it, I know
+        // that it makes app slow
+
+        // if(sendToUser.isConnected){
+        //   console.log('sendToUser is also connected');
+        //   console.log(`sending to socketId: ${sendToUser.socketId}`);
+        //   io.to(sendToUser.socketId).emit('gotNewMessage',
+        //     {
+        //       from: socket.userId,
+        //       message:dataObject.message,
+        //     }
+        //   );
+        // }
+        // else{
+        //   console.log('sendToUser is not connected right now');
+        // }
         //save this message 
         const message = new Message({
           conversationId: dataObject.conversationId,
@@ -87,12 +150,42 @@ module.exports = function(io){
           content: dataObject.message,
         });
         await message.save((err,doc) => {
-          if(err) return console.log('error in saving message to db, err:', err);
+          if(err) {
+            const dataToSendToClient={
+              success: false,
+              error: {
+                code: 'ERR_IN_SAVING_MSG_TO_DB',
+                message:'error in saving message to db'
+              }
+            }
+            callback(dataToSendToClient);
+            return console.log('error in saving message to db, err:', err);
+          }
+          const dataToSendToClient={
+            success: true,
+            message: doc
+          };
+          if(sendToUser.isConnected){
+            console.log('sendToUser is also connected');
+            console.log(`sending to socketId: ${sendToUser.socketId}`);
+            io.to(sendToUser.socketId).emit('gotNewMessage',
+              {
+                from: socket.userId,
+                message: doc,
+              }
+            );
+          }
+          else{
+            console.log('sendToUser is not connected right now');
+          }
+
+
+          //send data to sender client for ack and for show it in the messageItemList using messageId
+          callback(dataToSendToClient);
           console.log('message successfully saved in db');
         });
       });
       
-    });
-    
+    });    
   });
 }
