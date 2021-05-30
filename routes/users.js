@@ -7,11 +7,16 @@ const {User, validate, validateNonRequiredProperties} = require('../models/user'
 const express = require('express');
 const router = express.Router();
 
-// simple hello message for a get request
-// /api/users
-router.get('/', (req,res)=>{
-  res.send("Hello: I am working!");
+// /api/users: get all users
+router.get('/', authorization, (req,res)=>{
+  User.find((err, response)=>{
+    if(err) return res.status(400).send('not found');
+    console.log('sending all users');
+    res.send(response);
+  }).select('-password');
 });
+
+
 
 /////////////////// register a user//////////////////
 // api/users
@@ -46,6 +51,7 @@ router.post('/', async(req,res) => {
 // make sure that request header contains auth token
 router.get('/me', authorization, async(req,res)=>{
   const user = await User.findById(req.user._id).select('-password');
+  console.log('/me: sent details about me');
   res.send(user);
 })
 
@@ -140,6 +146,15 @@ router.post('/friends', authorization, async(req,res) =>{
       }
       return res.send('friend added successfully.');
     });
+});
+
+//////  get a user ////////
+/// api/users/:userId
+router.get('/:userId', authorization, (req,res)=>{
+  User.findById(req.params.userId, (err,result)=>{
+    if(err) return res.status(400).send('not found!');
+    res.send(result);
+  })
 });
 
 module.exports = router;
