@@ -36,23 +36,21 @@ app.set('io', io);
   // next();
 // })
 
-app.get('/*', function (req, res) {
-  res.sendFile(path.resolve(__dirname,config.get('staticFilePath'), 'index.html'));
-});
 
 require('./startup/routes')(app);
 require('./startup/db')(app);
 require('./startup/config')(app);
-// app.get('*', (req, res) => {
-//   res.sendFile(path.resolve(__dirname, './client/src', 'index.js'));
-// });
 
 // handle messaging events
 handleMessagingEvents(io);
+// for rest of the routes that is not in api
+app.get('/*', function (req, res) {
+  res.sendFile(path.resolve(__dirname,config.get('staticFilePath'), 'index.html'));
+});
 
 
 // make server listen on PORT
-const PORT = 3333 || Node.env.PORT;
+const PORT = process.env.PORT || 3333;
 server.listen(PORT, ()=> {
   console.log(`listening on port ${PORT}`);
 });

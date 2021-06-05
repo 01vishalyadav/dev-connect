@@ -1,8 +1,8 @@
 {
-  "jwtPrivateKey": "dev-connect_jwtPrivateKey",
+  "jwtPrivateKey": "dev_connect_jwtPrivateKey",
   "db":{
-    "user":"dev-connect_db_user",
-    "password":"dev-connect_db_password"
+    "user":"dev_connect_db_user",
+    "password":"dev_connect_db_password"
   }
 
 }
