@@ -1,37 +1,38 @@
 import React, {useState, useEffect, useRef} from 'react';
-import MessageItem from '../MessageItem/MessageItem';
+import moment from 'moment';
 import getAllMessages from '../api/messages/getAllMessages';
 import getAConversation from '../api/Conversations/getAConversation';
 import getAUser from '../api/users/getAUser';
-import getMe from '../api/users/getMe';
 import sendMessage from '../api/socketIO/sendMessage';
-import Container from '@material-ui/core/Container';
 import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
-import { Icon,Button,IconButton, Card, CardContent, List, ListItem, ListItemText, CardHeader, Typography, TextField } from '@material-ui/core';
+import { IconButton, Card, ListItem, ListItemText, CardHeader, TextField } from '@material-ui/core';
 import SendIcon from '@material-ui/icons/Send';
+import { List, AutoSizer, CellMeasurer, CellMeasurerCache } from "react-virtualized";
+
 
 export default function MessageItemList(props){
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [conversationTitle, setConversationTitle] = useState("default");
-  const [me, setMe] = useState();
   const [otherUser, setOtherUser] = useState();
   const [sendMessageContent, setSendMessageContent] = useState('');
   const [socket, setSocket] = useState(null);
-  const [gotNewMessage, setGotNewMessage] = useState(false);
-  const [gotNewMessageDataObject, setGotNewMessageDataObject] = useState(null);
   const[eventListenerInitialized, setEventListenerInitialized] = useState(false);
-  const [messageItemList, _setMessageItemList] = useState([]);
-  // define a ref to messageItemList
-  const messageItemListRef = useRef(messageItemList);
-  // in place of original setMessageItemList
-  const setMessageItemList = (newMessageItemList) => {
-    messageItemListRef.current = newMessageItemList;//keeps updated
-    _setMessageItemList(newMessageItemList);
-  }
-  const conversationId = props.conversationId;
+  let [messages, _setMessages] = useState([]);
+  const cache = new CellMeasurerCache({
+    fixedWidth: true,
+    defaultHeight: 100
+  });
 
+  // define a ref to messages
+  const messagesRef = useRef(messages);
+  // in place of original setMessages
+  const setMessages = (newMessages) => {
+    messagesRef.current = newMessages;//keeps updated
+    _setMessages(newMessages);
+  }
+
+  const conversationId = props.conversationId;
   
   async function getAndSetConversationTitle(conversation){
     let otherUserId=null;
@@ -54,14 +55,8 @@ export default function MessageItemList(props){
     
   }
 
-  // make sure that props has socket***********
-  // props.socket.on('gotNewMessage', (dataObject) => {
-  //   console.log('inside props.socket.on!');
-  //   setGotNewMessageDataObject(dataObject);
-  //   setGotNewMessage(true);
-  // });
-
   useEffect(()=>{
+    
     if(socket===null){
       console.log('setting socket which was got from props');
       if(props.socket)
@@ -72,9 +67,9 @@ export default function MessageItemList(props){
     
     if(props.conversationTitle!==null && props.otherUser){
       setConversationTitle(props.conversationTitle);
-      setOtherUser(props.otherUser);
-      
+      setOtherUser(props.otherUser);      
     }
+
     else{
       console.log('could not get the User or conversationTitle from props, may lead to bugs!');
       getAConversation(conversationId)
@@ -90,19 +85,11 @@ export default function MessageItemList(props){
       });
     }
 
-    getAllMessages(conversationId).then((messages)=>{  
-      if(messages.length>0){
-        let _messageItemList = messages.map((message,index)=>{
-          return <MessageItem 
-                    message={message} 
-                    key={message._id}
-                    user={props.user}
-                  />
-        });
-        console.log('messageItemListInitialized');
-        setMessageItemList(_messageItemList);
+    getAllMessages(conversationId).then((_messages)=>{  
+      if(_messages.length>0){
+        setMessages(_messages);
       }
-      else if(messages.length === 0){
+      else if(_messages.length === 0){
         console.log('no previous messages');
         // setMessageItemList = [];
       }
@@ -110,15 +97,9 @@ export default function MessageItemList(props){
       console.log('getAllMessages-err: ',err)
     }).finally(()=>{
       setIsLoading(false);
-    });
-    
+    });    
 
   },[]);
-
-  function addNewMessageItem(newMessageItem){
-    let newMessageItemList = [...(messageItemListRef.current), newMessageItem];
-    setMessageItemList(newMessageItemList);
-  }
 
 
   // make sure that this function runs only once*****
@@ -131,15 +112,11 @@ export default function MessageItemList(props){
 
       console.log(`got new message from: ${dataObject.from}, content is: ${dataObject.message.content}`);
       // create a new MessageItem
-      console.log('creating a new MessageItem...');
-      const newMessageItem = <MessageItem 
-                                message={dataObject.message}
-                                user = {props.user}
-                                key = {dataObject.message._id}
-                             />
+      console.log('creating a new Message');
+      const message = dataObject.message;
       // add newMessageItem at the end of messageItemList state
       // react will use older value of messageItemList which is [], to addNewMessageItem, because event listener will use value at the time it was registered. Use useRef to solve this issue
-      addNewMessageItem(newMessageItem);
+      setMessages([...messagesRef.current, message]);
     });
     setEventListenerInitialized(true);
   }
@@ -151,72 +128,100 @@ export default function MessageItemList(props){
       if(response.success){
         console.log('successfully sent message, response:', response);
         setSendMessageContent('');
-        // add a messageItem at the end of messageItemList,
-        // messageItem requiers:
-        // 1.const {from, content, _id, conversationId, createdAt, status} = props.message;
-        // 2.const userId = props.user._id;
-        const newMessageItem = <MessageItem 
-                                message={response.message}
-                                user = {props.user}
-                                key = {response.message._id}
-                              />
-        // add newMessageItem at the end of messageItemList state
-        addNewMessageItem(newMessageItem);
+        // add a message at the end of messages,
+        const message = response.message;
+        setMessages([...messages, message])
       }
     }
     if(sendMessageContent=='')  return;
     console.log('send message: ',sendMessageContent);
     console.log('otherUser:',otherUser);
-    sendMessage(socket, props.otherUser._id, conversationId, sendMessageContent, onResponse); 
-    
+    sendMessage(socket, props.otherUser._id, conversationId, sendMessageContent, onResponse);    
   }
 
   function sendMessageContentChangedHandler(e){
     setSendMessageContent(e.target.value);
   }
 
-  return(
-    <Container maxWidth="lg" >
-      {/* <Grid container>
-        <Grid item> */}
-          <Card>
-            <CardHeader title={conversationTitle=='default'?<p>Loading...</p>:conversationTitle} />
-            <CardContent>
-              <List>
-                {isLoading ? <h5>Loading...</h5>:messageItemList}
-              </List>
-              <form style={{position:'fixed'}}  noValidate autoComplete="off" 
-                    style={{width:'inherit'}}
-                    onSubmit={e=>{e.preventDefault();sendIconClickedHandler()}}
-              >
-                <TextField 
-                  id="outlined-basic" 
-                  label="Type new Message"       
-                  variant="outlined" 
-                  fullWidth
-                  onChange={(e)=>sendMessageContentChangedHandler(e)}
-                  value={sendMessageContent}
-                />
-                <IconButton 
-                  onClick={(e)=>sendIconClickedHandler(e)}
-                  color="primary" 
-                  aria-label="send message" 
-                  component="span"
-                >
-                  <SendIcon  />
-                </IconButton>
-              </form>
+  function renderRow({index, key, style, parent}) {
+    return (
+      <CellMeasurer
+        key={key}
+        cache={cache}
+        parent={parent}
+        columnIndex={0}
+        rowIndex={index} >
+        <div style={style}>
+        <ListItem divider >
+          <ListItemText
+            primary={messages[index].content}
+            secondary={moment(messages[index].createdAt).format('hh:mm:ss A, DD-MM-YY')}
+            style={{textAlign:messages[index].from===props.user._id?"right":"left"}}
+          />
+        </ListItem>
+        </div>
+      </CellMeasurer>
+    );
+  }
 
-            </CardContent>
-          </Card>
-      
-        {/* </Grid>
-      </Grid>   
-      <Grid container>
-        <Grid item>           */}
-           
-        {/* </Grid>
-      </Grid> */}
-    </Container>
+  return(
+    <Grid container spacing={3} >
+      <Grid item xs={12}>
+        <Card>
+          <CardHeader title={conversationTitle=='default'?<p>Loading...</p>:conversationTitle}>
+          </CardHeader>
+        </Card>
+      </Grid>
+      <Grid item xs={12} style={{height:'50vh', backgroundColor:'(231,132,205)'}}>
+        {isLoading?<h5>Loading...</h5>:
+          <AutoSizer>
+          {
+            ({width, height}) => {
+              return <List
+                width={width}
+                height={height}
+                deferredMeasurementCache={cache}
+                rowHeight={cache.rowHeight}
+                rowRenderer={renderRow}
+                rowCount={messages.length}
+                overscanColumnCount={3} 
+                  />
+            }
+          }
+        </AutoSizer>
+        }
+      </Grid>
+      <Grid item xs={12}>
+      <form
+          style={{positon:'fixed', margin:150 }}
+          noValidate 
+          autoComplete="off" 
+          style={{width:'inherit'}}
+          onSubmit={e=>{e.preventDefault();sendIconClickedHandler()}}>
+          <Grid container>
+            <Grid item xs={10}>
+              <TextField 
+                id="outlined-basic" 
+                label="Type new Message"       
+                variant="outlined" 
+                autoFocus
+                fullWidth
+                onChange={(e)=>sendMessageContentChangedHandler(e)}
+                value={sendMessageContent}
+              />
+            </Grid>
+            <Grid item xs={2} style={{textAlign:'right'}}>
+              <IconButton                  
+                onClick={(e)=>sendIconClickedHandler(e)}
+                color="primary" 
+                aria-label="send message" 
+                component="span" >
+                <SendIcon   />
+              </IconButton>
+            </Grid>
+          </Grid>
+        </form>
+      </Grid>
+    </Grid>
   );
 }
