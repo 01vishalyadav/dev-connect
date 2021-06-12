@@ -154,7 +154,7 @@ router.get('/:userId', authorization, (req,res)=>{
   User.findById(req.params.userId, (err,result)=>{
     if(err) return res.status(400).send('not found!');
     res.send(result);
-  })
+  }).select('-password')
 });
 
 module.exports = router;

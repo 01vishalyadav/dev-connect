@@ -155,7 +155,7 @@ export default function MessageItemList(props){
         <ListItem divider >
           <ListItemText
             primary={messages[index].content}
-            secondary={moment(messages[index].createdAt).format('hh:mm:ss A, DD-MM-YY')}
+            secondary={moment(messages[index].createdAt).format('hh:mm A, DD-MM-YY')}
             style={{textAlign:messages[index].from===props.user._id?"right":"left"}}
           />
         </ListItem>
@@ -184,7 +184,8 @@ export default function MessageItemList(props){
                 rowHeight={cache.rowHeight}
                 rowRenderer={renderRow}
                 rowCount={messages.length}
-                overscanColumnCount={3} 
+                overscanColumnCount={3}
+                scrollToIndex={messagesRef.current.length-1}
                   />
             }
           }
