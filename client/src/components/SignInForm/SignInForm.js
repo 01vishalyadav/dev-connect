@@ -1,14 +1,13 @@
 import React, {useState, useEffect} from 'react';
+import {useSelector, useDispatch} from 'react-redux';
+import * as actionCreators from '../../store/actions/index';
 import validator from 'validator';
-import axios from 'axios';
 
 import Alert from '@material-ui/lab/Alert';
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import TextField from '@material-ui/core/TextField';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import Checkbox from '@material-ui/core/Checkbox';
 import Link from '@material-ui/core/Link';
 import Grid from '@material-ui/core/Grid';
 import Box from '@material-ui/core/Box';
@@ -16,9 +15,7 @@ import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
-import FormHelperText from '@material-ui/core/FormHelperText';
 import Snackbar from '@material-ui/core/Snackbar';
-import MuiAlert from '@material-ui/lab/Alert';
 
 function Copyright() {
   return (
@@ -54,19 +51,24 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function SignIn(props) {
+  const dispatch = useDispatch();
+  const authentication = useSelector(state=>state.authentication);
+
   const classes = useStyles();
   const [email, setEmail] = useState('');
   const [errorInEmail, setErrorInEmail] = useState(false);
   const [password, setPassword] = useState('');
   const [errorInPassword, setErrorInPassword] = useState(false);
-  const [isSignedIn, setIsSignedIn] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
-  useEffect(()=>{
-    if(isSignedIn){
-      props.signInCompleted();
+  useEffect(() => {
+    if(authentication.error.valid) {
+      setSnackbarOpen(true);
+      setErrorInEmail(true);
+      setErrorInPassword(true);
     }
-  });
+  }, [authentication]);
+
   const handleSnackbarClose = (event, reason) => {
     if (reason === 'clickaway') {
       return;
@@ -91,22 +93,7 @@ export default function SignIn(props) {
       password: password,
     }
     // send request to API for authentication of this user
-    axios.post('/api/users/authentication', user)
-      .then(res => {
-        // send token to App.js that I am singedIn
-        localStorage.setItem('x-auth-token',res.data);
-        setIsSignedIn(true);
-      }).catch( (err)=>{
-        console.log("axios err:", err);
-        console.log("err.res.data:",err.response.data);
-        // show error that could not signedIn
-
-        setSnackbarOpen(true);
-        setErrorInEmail(true);
-        setErrorInPassword(true);
-
-      });
-      // show error that could not signedIn
+    dispatch(actionCreators.login(user));
   }
   function emailChangedHandler(e){
     if(validator.isEmail(e.target.value) )  setErrorInEmail(false);

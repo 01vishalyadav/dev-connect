@@ -1,5 +1,4 @@
 import React, {useState, useEffect} from 'react';
-import { makeStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
@@ -13,7 +12,7 @@ import MessageIcon from '@material-ui/icons/Message';
 export default function FeedItem(props){
   // props.user is the user for which this FeedItem is created
   const {firstName, email} = props.user;
-  function messageIconClickedHandler(e){
+  function messageIconClickedHandler(e) {
     // create a new conversation with this user, if there is not any one to one conversation having these two as participants
     // show MessageItemList
     // let these handle by home.js, because it will have thisUserId

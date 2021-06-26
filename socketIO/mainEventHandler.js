@@ -17,6 +17,9 @@ module.exports = function(io){
         return console.log('Not a objectId type');
       }
       socket.userId = dataObject.userId;
+      // send userBecameOnline event to all users
+      console.log('broadcasting userBecameOnline...');
+      io.emit('userBecameOnline',{from: dataObject.userId});
       // set this user as connected in db
       User.findByIdAndUpdate(socket.userId, {
         '$set':{ isConnected: true, socketId: socket.id }
@@ -27,9 +30,13 @@ module.exports = function(io){
     });
 
     socket.on('disconnect', () => {
+      const lastSeenAt = Date.now();
+      // send userBecameOffline event to all users
+      console.log('broadcasting userBecameOffline..._id', socket.userId);
+      io.emit('userBecameOffline',{from: socket.userId, lastSeenAt: lastSeenAt});
       // update this user's status to disconnected
       User.findByIdAndUpdate(socket.userId,{
-        '$set': {isConnected: false, socketId: ''},
+        '$set': {isConnected: false, socketId: '', lastSeenAt: lastSeenAt},
       }, (err, result) => {
         if(err) return console.log('could not set this user as disconnected in db.', err);
         console.log('successfully set this user as disconnected in the db');

@@ -1,22 +1,23 @@
 import React, {useState, useEffect, useRef} from 'react';
+import { useSelector } from 'react-redux';
 import moment from 'moment';
-import getAllMessages from '../api/messages/getAllMessages';
-import getAConversation from '../api/Conversations/getAConversation';
-import getAUser from '../api/users/getAUser';
-import sendMessage from '../api/socketIO/sendMessage';
+import getAllMessages from '../../api/messages/getAllMessages';
+import sendMessage from '../../api/socketIO/sendMessage';
 import Grid from '@material-ui/core/Grid';
-import Paper from '@material-ui/core/Paper';
 import { IconButton, Card, ListItem, ListItemText, CardHeader, TextField } from '@material-ui/core';
 import SendIcon from '@material-ui/icons/Send';
 import { List, AutoSizer, CellMeasurer, CellMeasurerCache } from "react-virtualized";
 
-
-export default function MessageItemList(props){
+export default function MessageItemList(props) {
+  console.log('////rendering messageItemList');
+  const isConnected = useSelector(state=>state.users.items.byId[props.otherUserId].isConnected);
+  const user = useSelector(state=>state.authentication.user);
+  const socket = useSelector(state=> state.socket.item);
+  const otherUser = useSelector(state=>state.users.items.byId[props.otherUserId]);
+  
   const [isLoading, setIsLoading] = useState(true);
-  const [conversationTitle, setConversationTitle] = useState("default");
-  const [otherUser, setOtherUser] = useState();
+  const [lastSeen, setLastSeen] = useState('default');
   const [sendMessageContent, setSendMessageContent] = useState('');
-  const [socket, setSocket] = useState(null);
   const[eventListenerInitialized, setEventListenerInitialized] = useState(false);
   let [messages, _setMessages] = useState([]);
   const cache = new CellMeasurerCache({
@@ -32,60 +33,19 @@ export default function MessageItemList(props){
     _setMessages(newMessages);
   }
 
-  const conversationId = props.conversationId;
-  
-  async function getAndSetConversationTitle(conversation){
-    let otherUserId=null;
-    if(props.user._id==conversation.participants[0])
-      otherUserId = conversation.participants[1];
-    else
-      otherUserId = conversation.participants[0];
-    getAUser(otherUserId)
-      .then((_otherUser)=>{
-      setConversationTitle(_otherUser.firstName);
-      console.log('_otherUser:', _otherUser);
-      setOtherUser(_otherUser);
-    })
-      .catch(err=>{
-        console.log('error in getting other user, err:',err);
-    })
-      .finally(()=>{
-
-    })
-    
-  }
+  // to get other user's lastSeen
+  useEffect(()=> {
+    // console.log('storeOheruser:', isConnected);
+    if(isConnected === true) {
+      setLastSeen('online');
+    }
+    else{
+      setLastSeen('last active at: '+moment(otherUser.lastSeenAt).format('hh:mm A, DD-MM-YY'));
+    }
+  }, [isConnected]);
 
   useEffect(()=>{
-    
-    if(socket===null){
-      console.log('setting socket which was got from props');
-      if(props.socket)
-        setSocket(props.socket);
-      else
-        console.log('err: props.socket is null');
-    }
-    
-    if(props.conversationTitle!==null && props.otherUser){
-      setConversationTitle(props.conversationTitle);
-      setOtherUser(props.otherUser);      
-    }
-
-    else{
-      console.log('could not get the User or conversationTitle from props, may lead to bugs!');
-      getAConversation(conversationId)
-        .then((conversation)=>{
-          getAndSetConversationTitle(conversation)
-            .then((_conversationTitle)=>{
-              console.log('useEffect: successfully set conversationTitle!')
-          });
-      })
-        .catch(err=>console.log('err in getting a conversation by Id, err:',err))
-        .finally(()=>{
-          setIsLoading(false);
-      });
-    }
-
-    getAllMessages(conversationId).then((_messages)=>{  
+    getAllMessages(props.conversationId).then((_messages)=>{  
       if(_messages.length>0){
         setMessages(_messages);
       }
@@ -97,8 +57,7 @@ export default function MessageItemList(props){
       console.log('getAllMessages-err: ',err)
     }).finally(()=>{
       setIsLoading(false);
-    });    
-
+    });
   },[]);
 
 
@@ -106,7 +65,7 @@ export default function MessageItemList(props){
   if(!eventListenerInitialized){
     // create socket.on here becouse it runs for one time only, so socket.on event listener will be only created once. when I used socket.on outside(in MessageItemList function, it registered itself for many times and it called itself for number of renders(==number of listener instances))
     console.log('##### settng eventListener #####');
-    props.socket.on('gotNewMessage', (dataObject) => {
+    socket.on('gotNewMessage', (dataObject) => {
       const fromUserId = dataObject.from;
       const GotNewMessage = dataObject.message;
 
@@ -134,9 +93,7 @@ export default function MessageItemList(props){
       }
     }
     if(sendMessageContent=='')  return;
-    console.log('send message: ',sendMessageContent);
-    console.log('otherUser:',otherUser);
-    sendMessage(socket, props.otherUser._id, conversationId, sendMessageContent, onResponse);    
+    sendMessage(socket, props.otherUserId, props.conversationId, sendMessageContent, onResponse);    
   }
 
   function sendMessageContentChangedHandler(e){
@@ -156,7 +113,7 @@ export default function MessageItemList(props){
           <ListItemText
             primary={messages[index].content}
             secondary={moment(messages[index].createdAt).format('hh:mm A, DD-MM-YY')}
-            style={{textAlign:messages[index].from===props.user._id?"right":"left"}}
+            style={{textAlign:messages[index].from===user._id?"right":"left"}}
           />
         </ListItem>
         </div>
@@ -168,7 +125,9 @@ export default function MessageItemList(props){
     <Grid container spacing={3} >
       <Grid item xs={12}>
         <Card>
-          <CardHeader title={conversationTitle=='default'?<p>Loading...</p>:conversationTitle}>
+          <CardHeader 
+            title={otherUser.firstName} 
+            subheader={lastSeen}>
           </CardHeader>
         </Card>
       </Grid>
@@ -183,6 +142,7 @@ export default function MessageItemList(props){
                 deferredMeasurementCache={cache}
                 rowHeight={cache.rowHeight}
                 rowRenderer={renderRow}
+                noRowsRenderer={()=> 'No Messages Yet!'}
                 rowCount={messages.length}
                 overscanColumnCount={3}
                 scrollToIndex={messagesRef.current.length-1}

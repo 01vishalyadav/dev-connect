@@ -1,32 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { io } from "socket.io-client";
-import getMe from '../api/users/getMe';
-import createAConversation from '../api/Conversations/createAConversation';
+import {useDispatch, useSelector} from 'react-redux';
+import * as actionCreators from '../../store/actions/index';
+import createAConversation from '../../api/Conversations/createAConversation';
 import MessageItemList from '../MessageItemList/MessageItemList';
 import FeedItemList from '../FeedItemList/FeedItemList';
 import ConversationItemList from '../ConversationItemList/ConversationItemList';
 import PropTypes from 'prop-types';
-import AppBar from '@material-ui/core/AppBar';
-import CssBaseline from '@material-ui/core/CssBaseline';
-import Divider from '@material-ui/core/Divider';
-import Drawer from '@material-ui/core/Drawer';
-import Hidden from '@material-ui/core/Hidden';
-import IconButton from '@material-ui/core/IconButton';
-import InboxIcon from '@material-ui/icons/MoveToInbox';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import ListItemText from '@material-ui/core/ListItemText';
-import MailIcon from '@material-ui/icons/Mail';
+import { AppBar, CssBaseline, Divider, Drawer, Hidden, 
+          IconButton, List, ListItem, ListItemIcon, 
+          ListItemText, Toolbar, Typography, Container,
+          Badge, 
+       }  from '@material-ui/core';
 import MenuIcon from '@material-ui/icons/Menu';
-import Toolbar from '@material-ui/core/Toolbar';
-import Typography from '@material-ui/core/Typography';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
 import AccountCircleIcon from '@material-ui/icons/AccountCircle';
 import DynamicFeedIcon from '@material-ui/icons/DynamicFeed';
 import ChatIcon from '@material-ui/icons/Chat';
-import ExitToAppIcon from '@material-ui/icons/ExitToApp';import { Container } from '@material-ui/core';
-import { set } from 'mongoose';
+import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 const drawerWidth = 240;
 
 const useStyles = makeStyles((theme) => ({
@@ -63,58 +53,40 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function Home(props) {
+  const dispatch = useDispatch();
+  const user = useSelector(state=> state.authentication.user);
+  const socket = useSelector(state => state.socket);
+  const newMessagesCount = useSelector(state=> state.newMessages.items.allIds.length);
+
+
   const { window } = props;
   const classes = useStyles();
   const theme = useTheme();
   const [mobileOpen, setMobileOpen] = React.useState(false);
-
-  const [isSignedIn, setIsSignedIn] = useState(true);
-  const [userId, setUserId] = useState(null);
-  const [firstName, setFirstName] = useState(null);
-  const [email, setEmail] = useState(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [showFeedItemList, setShowFeedItemList] = useState(false);
   const [showConversationItemList, setShowConversationItemList] = useState(false);
   const [showMessageItemList, setShowMessageItemList]=useState(false);
   const [messageItemList, setMessageItemList] = useState(null);
-  const [socket, setSocket] = useState(null);
 
-  console.log('Home.js:- user:',props.user);
 
-  useEffect(()=>{
-    if(!isLoggedIn){
-      getMe().then((me)=>{
-        console.log('setting user');
-        console.log('setting isLoggedIn');
+  useEffect(() => {
+    console.log('inHOmeUseEffect///////');
+    dispatch(actionCreators.setSocket());
+    dispatch(actionCreators.setConversations());
+    //setUsers which are in conversation with this user
+    // currently, setting all users...
+    dispatch(actionCreators.setUsers());
+  },[]);
 
-        setIsLoggedIn(true);
-      }).catch((err)=>{
-        console.log('Home.js:- Error in getting me, err:', err);
-        props.logout();
-      })
-    }
-    if(isLoggedIn && socket===null){// if logged in...
-      // connect to server using socket
-      const socket = io(('/'),{
-        auth: {
-          token: 'token',
-        }
-      });
-      socket.on('connect_error', (err) => {
-        console.log(`could not connect to socket, err: ${err.message}`);
-      });
-      console.log('working');
-      function setMeAsConnected (){
-        console.log('setMeAsConnected initiated');
-        const myUserId = props.user._id;
-        socket.emit('new user', {userId: myUserId});
-        console.log('setting socket: ',socket);
+  useEffect(() => {
+    if(socket && socket.item){
+      function setMeAsConnected () {
+        dispatch(actionCreators.handleSocketEvents());
         setShowFeedItemList(true);
-        setSocket(socket);
       }
       setMeAsConnected();
     }
-  });
+  }, [socket]);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -133,11 +105,8 @@ export default function Home(props) {
     // hide conversationItemList and show messageItemList for this conversationId
     setShowConversationItemList(false);
     setMessageItemList(<MessageItemList 
-                        conversationId={conversationId} 
-                        user={props.user}
-                        conversationTitle={conversationTitle}
-                        otherUser={otherUser}
-                        socket={socket}
+                        conversationId={conversationId}
+                        otherUserId={otherUser._id}
                       />)
     setShowMessageItemList(true);
   }
@@ -153,17 +122,15 @@ export default function Home(props) {
   function feedItemMessageIconClickedHandler(otherUser){
     setShowFeedItemList(false);
     // generate a new conversationId if not exist
-    console.log('otherUsrId:', otherUser._id);
-    createAConversation(otherUser._id).then(conversation=>{
+    createAConversation(otherUser._id).then(conversation => {
+      console.log('conversation/////', conversation);
+      dispatch(actionCreators.addAConversation(conversation));
       // get conversation title
-      console.log('got conv:',conversation);
-      console.log('socket:',socket);
+      // console.log('got conv:',conversation);
+      // console.log('socket:',socket);
       setMessageItemList(<MessageItemList 
-                          conversationId={conversation._id} 
-                          user={props.user}
-                          conversationTitle={otherUser.firstName}
-                          otherUser={otherUser}
-                          socket={socket}
+                          conversationId={conversation._id}
+                          otherUserId={otherUser._id}
                         />);
       setShowMessageItemList(true);
     }).catch(err=>{
@@ -172,7 +139,7 @@ export default function Home(props) {
   }
 
   function logoutIconClickedHandler(e){
-    props.logout();
+    dispatch(actionCreators.logout());
   }
 
   const drawer = (
@@ -185,8 +152,14 @@ export default function Home(props) {
           <ListItemIcon><DynamicFeedIcon /></ListItemIcon>
           <ListItemText primary={"Feed"} />
         </ListItem>
-        <ListItem button key={"conversationItemList"} onClick={(e)=>chatIconClickedHandler(e)}>
-          <ListItemIcon><ChatIcon /></ListItemIcon>
+        <ListItem button 
+                  key={"conversationItemList"} 
+                  onClick={(e)=>chatIconClickedHandler(e)}>
+          <ListItemIcon>
+          <Badge badgeContent={newMessagesCount} color="primary" max={99}>
+            <ChatIcon />
+          </Badge>
+          </ListItemIcon>
           <ListItemText primary={"Messages"} />
         </ListItem>
       </List>
@@ -260,13 +233,13 @@ export default function Home(props) {
         <div className={classes.toolbar} />
         <Container>
         
-        {isLoggedIn && showFeedItemList && <FeedItemList 
-                                            user={props.user}
+        {showFeedItemList && <FeedItemList
+                                            user = {user}
                                             feedItemMessageIconClicked={(otherUser)=>feedItemMessageIconClickedHandler(otherUser)}
                                             />
         }
-        {isLoggedIn && showConversationItemList && <ConversationItemList userId={userId} user={props.user}  conversationItemClicked={(conversationId, conversationTitle, otherUser)=>conversationItemClickedHandler(conversationId, conversationTitle, otherUser)} />}
-        {isLoggedIn && socket!==null && showMessageItemList && messageItemList}
+        { showConversationItemList && <ConversationItemList conversationItemClicked={(conversationId, conversationTitle, otherUser)=>conversationItemClickedHandler(conversationId, conversationTitle, otherUser)} />}
+        { socket!==null && showMessageItemList && messageItemList}
         </Container>
       </main>
     </div>

@@ -1,34 +1,33 @@
 import React, {useState, useEffect} from 'react';
-import getAllUsers from '../api/users/getAllUsers';
+import { useSelector, useDispatch } from 'react-redux';
+import getAllUsers from '../../api/users/getAllUsers';
 import FeedItem from '../FeedItem/FeedItem';
 
-import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
-import Typography from '@material-ui/core/Typography';
-import Button from '@material-ui/core/Button';
 import Grid from '@material-ui/core/Grid';
 
 export default function FeedItemList(props){
+  const user = useSelector(state => state.authentication.user);
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [feedItems, setFeedItems] = useState();
   function messageIconClickedHandler(otherUser){
     props.feedItemMessageIconClicked(otherUser);
   }
 
-  useEffect(()=>{
+  useEffect(() => {
     getAllUsers().then((users)=>{
       if(users.length>0){
         // exclude the current user using filter
         let _feedItems = users
-          .filter(user=> user._id !== props.user._id)
-          .map((user,index)=>{
+          .filter(otherUser=> otherUser._id !== user._id)
+          .map((otherUser,index)=>{
           return <FeedItem 
-                  user={user} 
-                  key={user._id} 
+                  user={otherUser}
+                  key={otherUser._id} 
                   messageIconClicked={(otherUser)=> messageIconClickedHandler(otherUser)} />
         });
-        console.log('feedItemsInitialized');
+        // console.log('feedItemsInitialized');
+        // console.log('got user from store: ', storeUser);
         setFeedItems(_feedItems);
       }
       setIsLoading(false); 
@@ -38,7 +37,7 @@ export default function FeedItemList(props){
     });
     
   },[]);
-
+  // console.log('storeUser:', storeUser);
   return(
     <Container maxWidth="lg" >
       <Grid>

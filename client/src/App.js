@@ -1,78 +1,58 @@
 import React, {useState, useEffect} from 'react';
-import axios from 'axios';
-import Home from './Home/Home';
-import SignInForm from './SignInForm/SignInForm';
-import SignUpForm from './SignUpForm/SignUpForm';
+import {useSelector, useDispatch} from 'react-redux';
+import * as actionCreators from './store/actions/index';
+
+import Home from './components/Home/Home';
+import SignInForm from './components/SignInForm/SignInForm';
+import SignUpForm from './components/SignUpForm/SignUpForm';
 import Container from '@material-ui/core/Container';
-import Grid from '@material-ui/core/Grid';
 import CircularProgress from '@material-ui/core/CircularProgress';
 
 export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [haveAccount, setHaveAccount] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState();
+  const dispatch = useDispatch();
+  const isLoggedIn = useSelector(state=>state.authentication.isLoggedIn);
+  const token = useSelector(state=>state.authentication.token);
+  const checkingTokenValidity = useSelector(state=>state.authentication.checkingTokenValidity);
+  const showHome = useSelector(state=>state.authentication.showHome);
 
-  const signUp = <SignUpForm signUpCompleted = {()=> signUpCompletedHandler()} haveAccountClicked={()=>haveAccountClickedHandler()} />
-  const signIn = <SignInForm signInCompleted = {()=> signInCompletedHandler() } dontHaveAccountClicked={()=>dontHaveAccountClickedHandler()} />
-  let form = signUp;
+  const [haveAccount, setHaveAccount] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
-  function checkIfAlreadyLoggedIn(){
-    if(!isLoggedIn){
-      setIsLoading(true);
-      const xAuthToken = localStorage.getItem('x-auth-token');
-      if(xAuthToken === null)  {
-        console.log('dont have token in localStorage');
-        setIsLoading(false);
-      }
-      else{
-        console.log('has token in localStorage');
-        let valid = false;
-        // present, but check if it is valid
-        axios.get('/api/users/me',{
-          headers: {
-            'x-auth-token': xAuthToken,
-          }
-        })
-        .then(res => {
-          console.log('has valid token', res);
-          setUser(res.data);
-          setIsLoggedIn(true);
-          setIsLoading(false);          
-        }).catch( (err)=>{
-          console.log("axios err:", err);
-          if(err.response){
-            console.log('axios received 4xx or 5xx');
-            console.log('rmoving token from localStorage');
-            localStorage.removeItem('x-auth-token');
-            setIsLoggedIn(false);
-            setIsLoading(false);   
-          }
-          else{
-            console.log('axios dont know what went wrong');
-            setIsLoggedIn(false);
-            setIsLoading(false);   
-          }
-        });
-      }
-    }
-  }
+  const signUp = <SignUpForm signUpCompleted = {()=> console.log('signUpcompleted!')} haveAccountClicked={()=>haveAccountClickedHandler()} />
+  const signIn = <SignInForm dontHaveAccountClicked={()=>dontHaveAccountClickedHandler()} />
+  let form = signIn;
 
   useEffect(()=>{
-    if(!isLoggedIn){
-      checkIfAlreadyLoggedIn();
-      if(haveAccount){
-        form = signIn;
-      }
+    if(!isLoggedIn && token.present) {
+      dispatch(actionCreators.checkTokenValidity());
     }
   },[]);
 
-  function signUpCompletedHandler() {
-    checkIfAlreadyLoggedIn();
-  }
-  function signInCompletedHandler() {
-    checkIfAlreadyLoggedIn();
-  }
+  useEffect(()=>{    
+    if(isLoggedIn && token.present && token.valid===false) {
+      console.log('calling dispatch for checkTokenValidity')
+      dispatch(actionCreators.checkTokenValidity());
+    }
+  }, [isLoggedIn]);
+
+  useEffect(()=>{
+    if(checkingTokenValidity)
+      setIsLoading(true);
+    else
+      setIsLoading(false);
+  })
+
+
+
+  useEffect(()=>{
+    if(haveAccount){
+      form = signIn;
+    }
+    else {
+      form = signUp;
+    }
+  },[haveAccount]);
+
   function haveAccountClickedHandler() {
     setHaveAccount(true);
   }
@@ -80,16 +60,11 @@ export default function App() {
     setHaveAccount(false);
   }
 
-  function logout() {
-    localStorage.removeItem('x-auth-token');
-    setIsLoggedIn(false);
-  }
-
   return (
     <Container maxWidth="lg">
       {
-        isLoading ? (<CircularProgress />)
-        :(isLoggedIn ? (<Home logout={()=>logout()} user={user} />):(haveAccount?signIn:signUp))
+        isLoading ? <CircularProgress />
+        :(showHome? <Home/>:(haveAccount?signIn:signUp))
       }
     </Container>
   );
