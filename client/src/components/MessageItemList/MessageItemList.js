@@ -1,7 +1,6 @@
 import React, {useState, useEffect, useRef} from 'react';
 import { useSelector } from 'react-redux';
 import moment from 'moment';
-import getAllMessages from '../../api/messages/getAllMessages';
 import sendMessage from '../../api/socketIO/sendMessage';
 import Grid from '@material-ui/core/Grid';
 import { IconButton, Card, ListItem, ListItemText, CardHeader, TextField } from '@material-ui/core';
@@ -14,82 +13,41 @@ export default function MessageItemList(props) {
   const user = useSelector(state=>state.authentication.user);
   const socket = useSelector(state=> state.socket.item);
   const otherUser = useSelector(state=>state.users.items.byId[props.otherUserId]);
+  const messages = useSelector(state=>state.messages.items.byConversationId[props.conversationId]);
+  // console.log(messages);
+  const settingAllMessages = useSelector(state=>state.messages.settingAllMessages);
+
   
   const [isLoading, setIsLoading] = useState(true);
   const [lastSeen, setLastSeen] = useState('default');
   const [sendMessageContent, setSendMessageContent] = useState('');
-  const[eventListenerInitialized, setEventListenerInitialized] = useState(false);
-  let [messages, _setMessages] = useState([]);
   const cache = new CellMeasurerCache({
     fixedWidth: true,
     defaultHeight: 100
   });
 
-  // define a ref to messages
-  const messagesRef = useRef(messages);
-  // in place of original setMessages
-  const setMessages = (newMessages) => {
-    messagesRef.current = newMessages;//keeps updated
-    _setMessages(newMessages);
-  }
+  useEffect(()=>{
+    if(settingAllMessages) {
+      setIsLoading(true);
+    }
+    else  setIsLoading(false);
+  },[settingAllMessages])
+
 
   // to get other user's lastSeen
   useEffect(()=> {
-    // console.log('storeOheruser:', isConnected);
-    if(isConnected === true) {
-      setLastSeen('online');
-    }
-    else{
-      setLastSeen('last active at: '+moment(otherUser.lastSeenAt).format('hh:mm A, DD-MM-YY'));
-    }
+    if(isConnected === true)   setLastSeen('online');
+    else  setLastSeen('last active at: '+moment(otherUser.lastSeenAt).format('hh:mm A, DD-MM-YY'));
   }, [isConnected]);
 
-  useEffect(()=>{
-    getAllMessages(props.conversationId).then((_messages)=>{  
-      if(_messages.length>0){
-        setMessages(_messages);
-      }
-      else if(_messages.length === 0){
-        console.log('no previous messages');
-        // setMessageItemList = [];
-      }
-    }).catch(err=>{
-      console.log('getAllMessages-err: ',err)
-    }).finally(()=>{
-      setIsLoading(false);
-    });
-  },[]);
 
-
-  // make sure that this function runs only once*****
-  if(!eventListenerInitialized){
-    // create socket.on here becouse it runs for one time only, so socket.on event listener will be only created once. when I used socket.on outside(in MessageItemList function, it registered itself for many times and it called itself for number of renders(==number of listener instances))
-    console.log('##### settng eventListener #####');
-    socket.on('gotNewMessage', (dataObject) => {
-      const fromUserId = dataObject.from;
-      const GotNewMessage = dataObject.message;
-
-      console.log(`got new message from: ${dataObject.from}, content is: ${dataObject.message.content}`);
-      // create a new MessageItem
-      console.log('creating a new Message');
-      const message = dataObject.message;
-      // add newMessageItem at the end of messageItemList state
-      // react will use older value of messageItemList which is [], to addNewMessageItem, because event listener will use value at the time it was registered. Use useRef to solve this issue
-      setMessages([...messagesRef.current, message]);
-    });
-    setEventListenerInitialized(true);
-  }
-
-  function sendIconClickedHandler(){
+  function sendIconClickedHandler() {
     // it is executed when sendMessage() gets a response from the server
     function onResponse(response){
-      // first check if message was successfully sent or not 
-      if(response.success){
-        console.log('successfully sent message, response:', response);
+      // check if message was successfully sent or not 
+      if(response.success) {
+        console.log('ack: successfully sent message, ackResponse:', response);
         setSendMessageContent('');
-        // add a message at the end of messages,
-        const message = response.message;
-        setMessages([...messages, message])
       }
     }
     if(sendMessageContent=='')  return;
@@ -145,7 +103,7 @@ export default function MessageItemList(props) {
                 noRowsRenderer={()=> 'No Messages Yet!'}
                 rowCount={messages.length}
                 overscanColumnCount={3}
-                scrollToIndex={messagesRef.current.length-1}
+                scrollToIndex={messages.length-1}
                   />
             }
           }

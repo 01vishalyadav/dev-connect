@@ -3,7 +3,7 @@ import { combineReducers } from 'redux';
 import { authentication } from './authentication';
 import {users} from './users';
 import { conversations } from './conversations';
-import { newMessages } from './newMessages';
+import { messages } from './messages';
 import { socket } from './socket';
 
 const rootReducer = combineReducers( {
@@ -11,7 +11,7 @@ const rootReducer = combineReducers( {
   users,
   conversations,
   socket,
-  newMessages,
+  messages,
 });
 
 export default rootReducer;

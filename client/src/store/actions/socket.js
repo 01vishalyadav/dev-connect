@@ -3,10 +3,12 @@ import setAndGetSocket from '../../api/socketIO/setAndGetSocket';
 import * as actionCreators from '../actions/index';
 
 export const setSocket = () => {
-  return dispatch => {
+  return (dispatch, getState) => {
     dispatch(request());
+    const state = getState();
     try{
-      const socket = setAndGetSocket();
+      console.log('state.auth.token.value:', state.authentication.token.value);
+      const socket = setAndGetSocket(state.authentication.token.value);
       dispatch(success(socket));
     }
     catch(error) {
@@ -38,10 +40,21 @@ export const handleSocketEvents = () => {
     const state = getState();
     const socket = state.socket.item;
     const userId = state.authentication.user._id;
-    // mark me as connected in backend
-    console.log('handleSocketEvents, emitting new User/////');
-    socket.emit('new user', {userId: userId});
-    // handle userBecameOffline
+
+
+    socket.onAny((event, ...args) => {
+      console.log('onAny:', event, args);
+    });
+
+    socket.on('onlineUsers', (dataObj)=>{
+      const onlineUsersIds = dataObj.onlineUserIds;
+      onlineUsersIds.forEach((onlineUserId)=>{
+        dispatch(actionCreators.userConnected(onlineUserId));
+      });
+    });
+
+
+    // handle userBecameOnline
     socket.on('userBecameOnline', dataObj=>{
       console.log('...userconnected, dataObj:', dataObj);
       if(dataObj.from != userId)
@@ -60,7 +73,7 @@ export const handleSocketEvents = () => {
     socket.on('gotNewMessage', dataObj => {
       const { message } = dataObj;
       console.log('gotNewMessage, message:', message);
-      dispatch(actionCreators.addNewMessage(message));
+      dispatch(actionCreators.addANewMessage(message.conversationId, message));
     });
   }
 }

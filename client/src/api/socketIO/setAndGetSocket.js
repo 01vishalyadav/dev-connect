@@ -1,11 +1,11 @@
 import { io } from "socket.io-client";
 
-export default function setAndGetSocket () {
+export default function setAndGetSocket (token) {
   // connect to server using socket
   try {
     const socket = io(('/'),{
       auth: {
-        token: 'token',
+        token: token,
       }
     });
     socket.on('connect_error', (err) => {

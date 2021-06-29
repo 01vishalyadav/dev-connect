@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import moment from 'moment';
 import {useSelector} from 'react-redux';
 import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
@@ -14,6 +15,37 @@ export default function ConversationItem(props) {
   const otherUserId = participants[0]===user._id ?  participants[1]  :  participants[0];
   const otherUser = useSelector(state=>state.users.items.byId[otherUserId]);
   console.log('convItem: otherUserId:', otherUserId);
+  const messages = useSelector(state=>state.messages.items.byConversationId[conversationId]);
+  const settingAllMessages = useSelector(state=>state.messages.settingAllMessages);
+
+  const [isLoading, setIsLoading] = useState(true);
+
+
+  let lastMessage = null;
+  useEffect(()=>{
+    if(!otherUser ) {
+      setIsLoading(true);
+    }
+    else if(settingAllMessages) {
+      setIsLoading(true);
+    }
+    else if(settingAllMessages===false && messages.length===0) {
+      return (
+        <p>No Messages yet</p>
+      )
+    }
+    else {
+      setIsLoading(false);
+    }
+  }, [otherUser, settingAllMessages, messages])
+  if(messages && messages.length>0)
+    lastMessage = messages[messages.length-1];
+
+  if(isLoading) {
+    return (
+      <p>Loading...</p>
+    )
+  }
   
   function conversationItemClickedHandler(){
     console.log('conversationItem clicked with convId:', conversationId);
@@ -28,10 +60,10 @@ export default function ConversationItem(props) {
             <Grid item>                
               <CardHeader 
                 title={otherUser.firstName}
-                subheader={'not set'}/>
+                subheader={otherUser.isConnected?'online': 'last seen at ' + moment(otherUser.lastSeenAt).format('hh:mm A, DD-MM-YY')}/>
               <CardContent>
                 <Typography variant="body1" color="initial">
-                  {'fromUserName: Message'}
+                  {(lastMessage.from===user._id ? user.firstName : otherUser.firstName) + ': ' + lastMessage.content}
                 </Typography>
               </CardContent>
             </Grid>

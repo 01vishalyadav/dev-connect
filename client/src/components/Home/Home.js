@@ -56,7 +56,8 @@ export default function Home(props) {
   const dispatch = useDispatch();
   const user = useSelector(state=> state.authentication.user);
   const socket = useSelector(state => state.socket);
-  const newMessagesCount = useSelector(state=> state.newMessages.items.allIds.length);
+  const newMessagesCount = 0;
+  const conversations = useSelector(state=> state.conversations);
 
 
   const { window } = props;
@@ -77,6 +78,14 @@ export default function Home(props) {
     // currently, setting all users...
     dispatch(actionCreators.setUsers());
   },[]);
+
+  useEffect(()=>{
+    if(!conversations.error.valid) {
+      if(conversations.items.allIds.length>0) {
+        dispatch(actionCreators.setAllMessagesForThisUser());
+      }
+    }
+  }, [conversations])
 
   useEffect(() => {
     if(socket && socket.item){

@@ -10,8 +10,10 @@ export default function ConversationItemList(props){
   const user = useSelector(state=>state.authentication.user);
   const users = useSelector(state => state.users);
   const dispatch = useDispatch();
+
   const [isLoading, setIsLoading] = useState(true);
   const [conversationItems, setConversationItems] = useState();
+
   
   function conversationItemClickedHandler(conversationId, conversationTitle, otherUser){
     // now hide conversationItemList and show messages for this conversation, to do so, return this signal to home, let it handle this
