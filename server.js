@@ -15,6 +15,7 @@ const io = socketio(server, {
     methods: ['GET', 'POST'],
   }
 });
+io.onlineUserIds = new Set();
 // Static files
 app.use(express.static(path.resolve(__dirname, `${config.get('staticFilePath')}`)));
 // set io to use it in any router, using req.app.get('io')

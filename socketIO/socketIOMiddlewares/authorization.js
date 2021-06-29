@@ -1,25 +1,28 @@
 const jwt = require('jsonwebtoken');
 const config = require('config');
+const { Conversation } = require('../../models/conversation');
 
 module.exports = function(socket, next) {
   const token = socket.handshake.auth.token;
   if(!token)  next(new Error('token not provided for socket connection'));
-  if(token=='token'){
-    console.log('middlewareSAuth: authorised successfully for socket');
-    next();
+  try {
+    const decoded = jwt.verify(token, config.get('jwtPrivateKey'));
+    socket.user = decoded;
+    Conversation.find(
+      {participants: socket.user._id},
+      (err,ids)=>{
+        if(err) return next (new Error('error serching conversationIds'));
+        socket.conversationIds=[];
+        ids.forEach((idObj)=>{
+          socket.conversationIds.push(idObj._id);
+        })
+        console.log('socketAuth, set socket.convIds:');
+        next();
+      }
+    ).select('_id');
   }
-  else{
+  catch(err) {
+    console.log('socketIO auth middleware err');
     next(new Error('invalid token for socket connection'));
   }
-  
-  // // if token provided, check for its validity
-  // try {
-  //   const decoded = jwt.verify(token, config.get('jwtPrivateKey'));
-  //   socket.user = decoded // add socket.user._id = decoded
-  //   console.log('user authorised successfully for socket connection');
-  //   next();
-  // }
-  // catch(ex){
-  //   next(new Error('invalid token for socket connection'));
-  // }
 }
