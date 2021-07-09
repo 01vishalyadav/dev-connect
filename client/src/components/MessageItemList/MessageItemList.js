@@ -35,7 +35,7 @@ export default function MessageItemList(props) {
 
 
   // to get other user's lastSeen
-  useEffect(()=> {
+  useEffect(() => {
     if(isConnected === true)   setLastSeen('online');
     else  setLastSeen('last active at: '+moment(otherUser.lastSeenAt).format('hh:mm A, DD-MM-YY'));
   }, [isConnected]);

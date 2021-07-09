@@ -17,16 +17,18 @@ export default function App() {
 
   const [haveAccount, setHaveAccount] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [signupCompleted, setSignupCompleted] = useState(false);
 
-  const signUp = <SignUpForm signUpCompleted = {()=> console.log('signUpcompleted!')} haveAccountClicked={()=>haveAccountClickedHandler()} />
+  const signUp = <SignUpForm signUpCompleted = {()=> setSignupCompleted(true)} 
+                             haveAccountClicked={()=>haveAccountClickedHandler()} />
   const signIn = <SignInForm dontHaveAccountClicked={()=>dontHaveAccountClickedHandler()} />
   let form = signIn;
 
-  useEffect(()=>{
-    if(!isLoggedIn && token.present) {
+  useEffect(() => {
+    if(signupCompleted||(!isLoggedIn && token.present)) {
       dispatch(actionCreators.checkTokenValidity());
     }
-  },[]);
+  },[isLoggedIn, token.present, signupCompleted]);
 
   useEffect(()=>{    
     if(isLoggedIn && token.present && token.valid===false) {

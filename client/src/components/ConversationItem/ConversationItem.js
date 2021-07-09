@@ -17,9 +17,7 @@ export default function ConversationItem(props) {
   console.log('convItem: otherUserId:', otherUserId);
   const messages = useSelector(state=>state.messages.items.byConversationId[conversationId]);
   const settingAllMessages = useSelector(state=>state.messages.settingAllMessages);
-
   const [isLoading, setIsLoading] = useState(true);
-
 
   let lastMessage = null;
   useEffect(()=>{
@@ -41,11 +39,11 @@ export default function ConversationItem(props) {
   if(messages && messages.length>0)
     lastMessage = messages[messages.length-1];
 
-  if(isLoading) {
-    return (
-      <p>Loading...</p>
-    )
-  }
+  // if(isLoading) {
+  //   return (
+  //     <p>Loading...</p>
+  //   )
+  // }
   
   function conversationItemClickedHandler(){
     console.log('conversationItem clicked with convId:', conversationId);
@@ -63,7 +61,7 @@ export default function ConversationItem(props) {
                 subheader={otherUser.isConnected?'online': 'last seen at ' + moment(otherUser.lastSeenAt).format('hh:mm A, DD-MM-YY')}/>
               <CardContent>
                 <Typography variant="body1" color="initial">
-                  {(lastMessage.from===user._id ? user.firstName : otherUser.firstName) + ': ' + lastMessage.content}
+                  {!lastMessage?"Conversation initiated but no messages yet":((lastMessage.from===user._id ? user.firstName : otherUser.firstName) + ': ' + lastMessage.content)}
                 </Typography>
               </CardContent>
             </Grid>

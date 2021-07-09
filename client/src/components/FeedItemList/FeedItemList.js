@@ -41,7 +41,7 @@ export default function FeedItemList(props){
   return(
     <Container maxWidth="lg" >
       <Grid>
-        {isLoading?(<h5>Loading: FeedItemList</h5>):(!feedItems?<h5>null</h5>:feedItems)}
+        {isLoading?(<h5>Loading: FeedItemList</h5>):(!feedItems?<h5>There is not any user to show!</h5>:feedItems)}
       </Grid>
     </Container>
   );

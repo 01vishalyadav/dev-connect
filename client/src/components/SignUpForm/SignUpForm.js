@@ -13,7 +13,8 @@ import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
-
+import Snackbar from '@material-ui/core/Snackbar';
+import Alert from '@material-ui/lab/Alert';
 
 
 function Copyright() {
@@ -60,16 +61,24 @@ export default function SignUp(props) {
   const [errorInLastName, setErrorInLastName] = useState(false);
   const [errorInEmail, setErrorInEmail] = useState(false);
   const [errorInPassword, setErrorInPassword] = useState(false);
-  const [alreadyHaveAccount, setAlreadyHaveAccount] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+
+
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setSnackbarOpen(false);
+  };
 
   function signUpComplete() {
     props.signUpCompleted();
   }
 
-  function signUpButtonClickedHandler(e){
+  function signUpButtonClickedHandler(e) {
     e.preventDefault();
-    if(firstName==='' || email===''|| password===''){
-      if(firstName===''){
+    if(firstName==='' || email===''|| password==='') {
+      if(firstName==='') {
         setErrorInFirstName(true);
       }
       if(email===''){
@@ -96,10 +105,11 @@ export default function SignUp(props) {
         signUpComplete();
 
       }).catch( (err)=>{
-
-        console.log("could not signUp, axios err:", err);
+        console.log("could not signUp, err:", err);
         
         // show error that could not signedUp
+        setSnackbarOpen(true);
+        setErrorInEmail(true);
       });
       // show error that could not signedUp
   }
@@ -137,6 +147,16 @@ export default function SignUp(props) {
 
   return (
     <Container component="main" maxWidth="xs">
+      <Snackbar 
+        open={snackbarOpen} 
+        autoHideDuration={5000} 
+        onClose={handleSnackbarClose} 
+        anchorOrigin={{vertical:'top',horizontal:'center'}}>
+        <Alert onClose={handleSnackbarClose} 
+          severity="error">
+          Email is already registered!
+        </Alert>
+      </Snackbar>
       <CssBaseline />
       <div className={classes.paper}>
         <Avatar className={classes.avatar}>
