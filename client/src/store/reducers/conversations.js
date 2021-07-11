@@ -17,7 +17,7 @@ const initialState = {
 
 export function conversations(state = initialState, action) {
   switch (action.type) {
-    case actionTypes.SET_CONVERSATIONS_SUCCESS:
+    case actionTypes.SET_CONVERSATIONS_SUCCESS: {
       console.log('conversation reducer: action:', action);
       /*
       {
@@ -50,12 +50,14 @@ export function conversations(state = initialState, action) {
           valid: false
         }
       };
-    case actionTypes.SET_CONVERSATIONS_REQUEST:
+    }
+    case actionTypes.SET_CONVERSATIONS_REQUEST: {
       return {
         ...state,
         settingConversations: true,
-      }
-    case actionTypes.SET_CONVERSATIONS_FAILURE:
+      };
+    }
+    case actionTypes.SET_CONVERSATIONS_FAILURE: {
       return {
         ...state,
         settingConversations: false,
@@ -64,20 +66,25 @@ export function conversations(state = initialState, action) {
           valid: true,
           message: action.payload.error,
         }
-      }
+      };
+    }
     case actionTypes.ADD_A_CONVERSATION: {
+      console.log('conv reducer, addAConversation, conv:', action.payload.conversation);
       return {
         ...state,
         items: {
+          ...state.items,
           byId: {
             ...state.items.byId,
             [action.payload.conversation._id]: action.payload.conversation,
           },
           allIds: [...state.items.allIds, action.payload.conversation._id]
         }
-      }
+      };
     }
-    default:
+    default: {
+      // console.log('conv reducer, default case');
       return state;
+    }
   }
 }

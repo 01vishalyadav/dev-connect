@@ -11,13 +11,13 @@ module.exports = function(io){
   io.on('connection', (socket) => {
     console.log('new user connected');
     let onlineUserIds = [];
-    io.onlineUserIds.forEach((userId)=>{
-      onlineUserIds.push(userId);
-    });
+    for(var onlineUserId of io.onlineUserIdSocketMap.keys()) {
+      onlineUserIds.push(onlineUserId);
+    }
     socket.emit('onlineUsers', {
       onlineUserIds: onlineUserIds,
     })
-    io.onlineUserIds.add(socket.user._id);
+    io.onlineUserIdSocketMap.set(socket.user._id, socket);
     /* 
     get all conversations in which this user is involved (can attach all convIds in which this user is participated with this socket at the time of authentication)
     for each such conversation:
@@ -60,7 +60,7 @@ module.exports = function(io){
     
 
     socket.on('disconnect', () => {
-      io.onlineUserIds.delete(socket.user._id);
+      io.onlineUserIdSocketMap.delete(socket.user._id);
       /* 
       broadcast that this userId desconnected with lastSeenAt,
       update lastSeenAt for this userId in the db

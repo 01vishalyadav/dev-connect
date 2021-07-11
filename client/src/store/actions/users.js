@@ -1,5 +1,4 @@
 import * as actionTypes from '../actions/actionTypes';
-import getAUser from '../../api/users/getAUser';
 import getAllUsers from '../../api/users/getAllUsers';
 
 

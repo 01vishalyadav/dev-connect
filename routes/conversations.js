@@ -74,6 +74,31 @@ router.post('/', authorization, async(req,res)=>{
       });
       conversation.save((err,doc)=>{
         if(err) return res.status(400).send('could not create a conversation');
+        /*
+        add thisUser and otherUser to a room (conversationId room)
+
+        */
+       const io = req.app.get('io');
+        // check if u have updated list of io.onlineUsers
+        for(let i=0;i<2;i=i+1)  {
+          const userId = doc.participants[i];
+          const socket = io.onlineUserIdSocketMap.get(String(userId));
+          
+          if(io.onlineUserIdSocketMap.has(String(userId))) {
+            console.log('have userId', userId);
+          }
+          else {
+            console.log('dont have userId', userId);
+          }
+          if(socket)  {
+            console.log('emitting to socket with userId', userId);
+            socket.emit('newConversation', {conversation: doc});
+            socket.conversationIds.push(doc._id);
+            console.log(`${userId} joining ${doc._id}`);
+            socket.join(String(doc._id));
+          }
+        }        
+        //now send the response if above code runs without error, so put above in try catch block...
         res.send(doc);
       });
     }

@@ -32,7 +32,9 @@ export const setConversations = () => {
 
 export const addAConversation = (conversation) => {
   return dispatch => {
+    console.log('dispatching addAConversation');
     dispatch(success(conversation));
+    return;
   };
   
   function success(conversation) {

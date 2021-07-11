@@ -7,7 +7,7 @@ export const setSocket = () => {
     dispatch(request());
     const state = getState();
     try{
-      console.log('state.auth.token.value:', state.authentication.token.value);
+      // console.log('state.auth.token.value:', state.authentication.token.value);
       const socket = setAndGetSocket(state.authentication.token.value);
       dispatch(success(socket));
     }
@@ -75,5 +75,24 @@ export const handleSocketEvents = () => {
       console.log('gotNewMessage, message:', message);
       dispatch(actionCreators.addANewMessage(message.conversationId, message));
     });
+
+    socket.on('newConversation', dataObj => {
+      const {conversation} = dataObj;
+      console.log('newConversation event, dataObj.conv:', dataObj.conversation);
+      dispatch(actionCreators.addAConversation(conversation));
+    });
+  }
+}
+
+export const disconnectSocket = () => {
+  return (dispatch, getState) => {
+    try{
+      const state = getState();
+      const socket = state.socket.value;
+      socket.disconnect();
+    }
+    catch(err) {
+      console.log('error in disconnecting socket, err:', err);
+    }
   }
 }

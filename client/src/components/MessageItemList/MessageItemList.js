@@ -31,7 +31,13 @@ export default function MessageItemList(props) {
       setIsLoading(true);
     }
     else  setIsLoading(false);
-  },[settingAllMessages])
+  },[settingAllMessages]);
+
+  useEffect(()=>{
+    if(!messages) {
+      
+    }
+  }, [messages]);
 
 
   // to get other user's lastSeen
@@ -91,6 +97,7 @@ export default function MessageItemList(props) {
       </Grid>
       <Grid item xs={12} style={{height:'50vh', backgroundColor:'(231,132,205)'}}>
         {isLoading?<h5>Loading...</h5>:
+          !messages? <p>No messages yet</p>:
           <AutoSizer>
           {
             ({width, height}) => {

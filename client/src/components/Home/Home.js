@@ -133,7 +133,6 @@ export default function Home(props) {
     // generate a new conversationId if not exist
     createAConversation(otherUser._id).then(conversation => {
       console.log('conversation/////', conversation);
-      dispatch(actionCreators.addAConversation(conversation));
       // get conversation title
       // console.log('got conv:',conversation);
       // console.log('socket:',socket);

@@ -2,8 +2,8 @@ import * as actionTypes from '../actions/actionTypes';
 import getMe from '../../api/users/getMe';
 import authenticate from '../../api/users/authenticate';
 import getToken from '../../utills/getToken';
-import setToken from '../../utills/setToken';
 import removeToken from '../../utills/removeToken';
+import * as actionCreators from '../actions/index';
 
 export const login = (user) => {
   return async (dispatch) => {
@@ -55,8 +55,9 @@ export const checkTokenValidity = () => {
 }
 
 export const logout = () => {
-  return async (dispatch) => {
+  return async (dispatch, getState) => {
     removeToken();
+    actionCreators.disconnectSocket();
     dispatch(success());
   }
   function success() { return { type:actionTypes.LOGOUT_SUCCESS } }
