@@ -183,6 +183,7 @@ export default function SignIn(props) {
               <Link variant="body2" onClick={(e)=>dontHaveAccountClickedHandler(e)}>
                 {"Don't have an account? Sign Up"}
               </Link>
+              <Link href="https://github.com/login/oauth/authorize?client_id=b6c57bc0f8bedf1f53a3">Use GitHub OAuth</Link>
             </Grid>
           </Grid>
         </form>

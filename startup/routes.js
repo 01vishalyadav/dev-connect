@@ -5,7 +5,7 @@ const users = require('../routes/users');
 const conversations = require('../routes/conversations');
 const authentication = require('../routes/authentication');
 // const error = require('../middlewares/error');
-const authorisation = require('../routes/oAuth');
+const oAuth = require('../routes/oAuth');
 
 
 module.exports = function(app) {
@@ -18,5 +18,6 @@ module.exports = function(app) {
   // app.use('/api/conversations/:conversationId/messages', messages);
   app.use('/api/conversations', conversations);
   app.use('/api/users/authentication', authentication);
+  app.use('/api/oauth', oAuth);
   // app.use(error);
 }
