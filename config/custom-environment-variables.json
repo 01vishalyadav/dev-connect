@@ -3,6 +3,11 @@
   "db":{
     "user":"dev_connect_db_user",
     "password":"dev_connect_db_password"
+  },
+  "oAuth": {
+    "github":{
+      "clientID":"dev_connect_github_client_id",
+      "clientSecret":"dev_connect_github_client_secret"
+    }
   }
-
 }
