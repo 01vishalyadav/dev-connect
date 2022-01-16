@@ -7,7 +7,6 @@ const ObjectId = mongoose.Schema.Types.ObjectId;
 const userSchema = new mongoose.Schema({
   firstName: {
     type: String,
-    required: true,
     minlength: 3,
     maxlength: 50
   },
@@ -18,14 +17,11 @@ const userSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    required: true,
     minlength: 5,
     maxlength: 255,
-    unique: true
   },
   password: {
     type: String,
-    required: true,
     minlength: 4,
     maxlength: 255,
   },
@@ -34,6 +30,8 @@ const userSchema = new mongoose.Schema({
     minlength: 2,
     maxlength: 50,
     default: null,
+    required: true,
+    unique: true,
   },
   linkedinId: {
     type: String,
@@ -69,6 +67,18 @@ const userSchema = new mongoose.Schema({
   },
   socketId: {
     type: String,
+  },
+  isOAuth: {
+    type: Boolean,
+    default: true,
+  },
+  github_access_token: {
+    type: String,
+    default: null,
+  },
+  publicReposCount: {
+    type: Number,
+    default: 0
   },
 });
 
