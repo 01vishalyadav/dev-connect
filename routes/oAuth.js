@@ -33,7 +33,7 @@ router.get('/github/callback', async(req, res) => {
       console.log("got response");
       const userData = response.data;
       if(req.app.get('env') !== 'production') {
-        console.log('response.data:************************************************************************************************************************************************************************', userData);
+        // console.log('response.data:************************************************************************************************************************************************************************', userData);
       }
       const nameArray = userData.name.split(" ") ? userData.name.split(" ") : null;
       console.log("name arr:", nameArray);
@@ -57,6 +57,7 @@ router.get('/github/callback', async(req, res) => {
             github_access_token: access_token,
             publicReposCount: req.body.user.publicReposCount,
           });
+        console.log("*********token*******",token);
         res.send(token);
       }
       else {

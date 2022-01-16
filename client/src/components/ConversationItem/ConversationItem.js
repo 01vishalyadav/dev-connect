@@ -12,8 +12,10 @@ export default function ConversationItem(props) {
   const conversationId = props.conversationId;
   const user = useSelector(state=>state.authentication.user);
   const participants = useSelector(state=>state.conversations.items.byId[conversationId].participants);
+
   const otherUserId = participants[0]===user._id ?  participants[1]  :  participants[0];
   const otherUser = useSelector(state=>state.users.items.byId[otherUserId]);
+  console.log(otherUser);
   console.log('convItem: otherUserId:', otherUserId);
   const messages = useSelector(state=>state.messages.items.byConversationId[conversationId]);
   const settingAllMessages = useSelector(state=>state.messages.settingAllMessages);
