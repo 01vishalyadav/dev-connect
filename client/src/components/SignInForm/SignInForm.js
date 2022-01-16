@@ -24,9 +24,9 @@ import Snackbar from '@material-ui/core/Snackbar';
 
 function Copyright() {
   return (
-    <Typography variant="body2" color="textSecondary" align="center">
+    <Typography variant="body2" color="textSecondary" align="center" >
       {'Copyright © '}
-      <Link color="inherit" href="localhost:3000">
+      <Link color="inherit" href="/">
         Dev-Connect
       </Link>{' '}
       {new Date().getFullYear()}

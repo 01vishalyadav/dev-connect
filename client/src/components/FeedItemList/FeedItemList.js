@@ -5,6 +5,8 @@ import FeedItem from '../FeedItem/FeedItem';
 
 import Container from '@material-ui/core/Container';
 import Grid from '@material-ui/core/Grid';
+import CircularProgress from '@material-ui/core/CircularProgress';
+
 
 export default function FeedItemList(props){
   const user = useSelector(state => state.authentication.user);
@@ -41,7 +43,7 @@ export default function FeedItemList(props){
   return(
     <Container maxWidth="lg" >
       <Grid>
-        {isLoading?(<h5>Loading: FeedItemList</h5>):(!feedItems?<h5>There is not any user to show!</h5>:feedItems)}
+        {isLoading?(<CircularProgress />):(!feedItems?<h5>There is not any user to show!</h5>:feedItems)}
       </Grid>
     </Container>
   );
