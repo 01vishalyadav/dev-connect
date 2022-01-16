@@ -57,11 +57,11 @@ export default function ConversationItem(props) {
           <Grid container justify="flex-start" spacing={10}>
             <Grid item>                
               <CardHeader 
-                title={otherUser.firstName}
+                title={`${otherUser.githubId} ${otherUser.firstName && otherUser.firstName != ""? "(" + otherUser.firstName + (otherUser.lastName && otherUser.lastName != "" ? " " + otherUser.lastName : "") + ")" : ""} `}
                 subheader={otherUser.isConnected?'online': 'last seen at ' + moment(otherUser.lastSeenAt).format('hh:mm A, DD-MM-YY')}/>
               <CardContent>
                 <Typography variant="body1" color="initial">
-                  {!lastMessage?"Conversation initiated but no messages yet":((lastMessage.from===user._id ? user.firstName : otherUser.firstName) + ': ' + lastMessage.content)}
+                  {!lastMessage?"Conversation initiated but no messages yet":((lastMessage.from===user._id ? "You" : "Other Person") + ': ' + lastMessage.content)}
                 </Typography>
               </CardContent>
             </Grid>

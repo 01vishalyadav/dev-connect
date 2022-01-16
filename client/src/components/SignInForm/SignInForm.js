@@ -2,7 +2,11 @@ import React, {useState, useEffect} from 'react';
 import {useSelector, useDispatch} from 'react-redux';
 import * as actionCreators from '../../store/actions/index';
 import validator from 'validator';
+import queryString from 'query-string';
 
+import CircularProgress from '@material-ui/core/CircularProgress';
+import IconButton from '@material-ui/core/IconButton';
+import GitHubIcon from '@material-ui/icons/GitHub';
 import Alert from '@material-ui/lab/Alert';
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
@@ -16,6 +20,7 @@ import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
 import Snackbar from '@material-ui/core/Snackbar';
+
 
 function Copyright() {
   return (
@@ -60,7 +65,12 @@ export default function SignIn(props) {
   const [password, setPassword] = useState('');
   const [errorInPassword, setErrorInPassword] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [code, setCode] = useState(queryString.parse(window.location.search).code);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isOAuthEnabled, setIsOAuthEnabled] = useState(true);
+  
 
+  
   useEffect(() => {
     if(authentication.error.valid) {
       setSnackbarOpen(true);
@@ -68,6 +78,24 @@ export default function SignIn(props) {
       setErrorInPassword(true);
     }
   }, [authentication]);
+
+  useEffect(() => {
+    // if (queryString.parse(location.search).code)
+    //   setCode(queryString.parse(location.search).code);
+    // else 
+    //   setCode("");
+    if(code && code != ""){
+      console.log("code =", code);
+      const user = {code: code};
+      setIsLoading(true);
+      dispatch(actionCreators.login(user));
+    }
+  }, [code]);
+
+  useEffect(()=> {
+    console.log('signInForm, isLoading', isLoading);
+  },[isLoading]);
+
 
   const handleSnackbarClose = (event, reason) => {
     if (reason === 'clickaway') {
@@ -115,6 +143,7 @@ export default function SignIn(props) {
   }
 
   return (
+    isLoading ? <CircularProgress /> :
     <Container component="main" maxWidth="xs">
       <Snackbar 
         open={snackbarOpen} 
@@ -132,61 +161,75 @@ export default function SignIn(props) {
           <LockOutlinedIcon />
         </Avatar>
         <Typography component="h1" variant="h5">
-          Sign in
+          Sign in using
         </Typography>
-        <form className={classes.form} noValidate>
-          <TextField
-            variant="outlined"
-            margin="normal"
-            required
-            fullWidth
-            id="email"
-            label="Email Address"
-            name="email"
-            autoComplete="email"
-            autoFocus
-            type="email"
-            error={errorInEmail}
-            onChange={(e)=>emailChangedHandler(e)}  
-          />
-          <TextField
-            variant="outlined"
-            margin="normal"
-            required
-            fullWidth
-            name="password"
-            label="Password"
-            type="password"
-            id="password"
-            autoComplete="current-password"
-            error={errorInPassword}
-            onChange={(e)=>passwordChangedHandler(e)}
-          />
-          
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            color="primary"
-            className={classes.submit}
-            onClick= {(e)=> signInButtonClickedHandler(e)}
-          >
-            Sign In
-          </Button>
-          <Grid container>
-            <Grid item xs>
-              <Link variant="body2">
-                Forgot password?
-              </Link>
-            </Grid>
-            <Grid item>
-              <Link variant="body2" onClick={(e)=>dontHaveAccountClickedHandler(e)}>
-                {"Don't have an account? Sign Up"}
-              </Link>
-              <Link href="https://github.com/login/oauth/authorize?client_id=b6c57bc0f8bedf1f53a3">Use GitHub OAuth</Link>
-            </Grid>
+        {
+          isOAuthEnabled
+          ?
+          <Grid Container>
+            <IconButton 
+              aria-label="GitHub" 
+              href="https://github.com/login/oauth/authorize?client_id=cbea6799c7a92cf8030b">
+              <GitHubIcon 
+                fontSize="large"
+              />
+            </IconButton>
           </Grid>
-        </form>
+          :
+          <form className={classes.form} noValidate>
+            <TextField
+              variant="outlined"
+              margin="normal"
+              required
+              fullWidth
+              id="email"
+              label="Email Address"
+              name="email"
+              autoComplete="email"
+              autoFocus
+              type="email"
+              error={errorInEmail}
+              onChange={(e)=>emailChangedHandler(e)}  
+            />
+            <TextField
+              variant="outlined"
+              margin="normal"
+              required
+              fullWidth
+              name="password"
+              label="Password"
+              type="password"
+              id="password"
+              autoComplete="current-password"
+              error={errorInPassword}
+              onChange={(e)=>passwordChangedHandler(e)}
+            />
+            
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              color="primary"
+              className={classes.submit}
+              onClick= {(e)=> signInButtonClickedHandler(e)}
+            >
+              Sign In
+            </Button>
+            <Grid container>
+              <Grid item xs>
+                <Link variant="body2">
+                  Forgot password?
+                </Link>
+              </Grid>
+              <Grid item>
+                <Link variant="body2" onClick={(e)=>dontHaveAccountClickedHandler(e)}>
+                  {"Don't have an account? Sign Up"}
+                </Link>
+                
+              </Grid>
+            </Grid>
+          </form>
+        }
       </div>
       <Box mt={8}>
         <Copyright />

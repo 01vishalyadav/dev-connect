@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {useDispatch, useSelector} from 'react-redux';
+import { useNavigate } from "react-router-dom";
+
+
 import * as actionCreators from '../../store/actions/index';
 import createAConversation from '../../api/Conversations/createAConversation';
 import MessageItemList from '../MessageItemList/MessageItemList';
@@ -54,6 +57,7 @@ const useStyles = makeStyles((theme) => ({
 
 export default function Home(props) {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const user = useSelector(state=> state.authentication.user);
   const socket = useSelector(state => state.socket);
   const newMessagesCount = 0;
@@ -72,6 +76,14 @@ export default function Home(props) {
 
   useEffect(() => {
     console.log('inHOmeUseEffect///////');
+    // change url to /home
+    console.log('Going to change url to /home');
+    // const state = { 'page_id': 1, 'user_id': 5 }
+    // const title = ''
+    // const url = 'hello-world.html'
+
+    navigate('/');
+
     dispatch(actionCreators.setSocket());
     dispatch(actionCreators.setConversations());
     //setUsers which are in conversation with this user
@@ -188,6 +200,7 @@ export default function Home(props) {
   const container = window !== undefined ? () => window().document.body : undefined;
 
   return (
+    
     <div className={classes.root}>
       <CssBaseline />
       <AppBar position="fixed" className={classes.appBar}>
@@ -251,6 +264,7 @@ export default function Home(props) {
         </Container>
       </main>
     </div>
+  
   );
 }
 

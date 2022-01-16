@@ -11,7 +11,7 @@ import MessageIcon from '@material-ui/icons/Message';
 
 export default function FeedItem(props){
   // props.user is the user for which this FeedItem is created
-  const {firstName, email} = props.user;
+  const {firstName, lastName, email, githubId, publicReposCount} = props.user;
   function messageIconClickedHandler(e) {
     // create a new conversation with this user, if there is not any one to one conversation having these two as participants
     // show MessageItemList
@@ -25,9 +25,13 @@ export default function FeedItem(props){
         <Card>
           <Grid container justify="flex-start" spacing={10}>
             <Grid item>                
-              <CardHeader title={firstName}subheader={email}/>
+              <CardHeader 
+                title={`${githubId} ${firstName && firstName != ""? "(" + firstName + (lastName && lastName != "" ? " " + lastName : "") + ")" : ""} `}
+                subheader={`Public Repos Count: ${publicReposCount}`}
+              />
               <CardContent>
                 <Typography variant="body1" color="initial">
+                  {email ? `email: ${email}` : ``}
                 </Typography>
               </CardContent>
               <CardActions disableSpacing>

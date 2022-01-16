@@ -90,7 +90,7 @@ export default function MessageItemList(props) {
       <Grid item xs={12}>
         <Card>
           <CardHeader 
-            title={otherUser.firstName} 
+            title={`${otherUser.githubId} ${otherUser.firstName && otherUser.firstName != ""? "(" + otherUser.firstName + (otherUser.lastName && otherUser.lastName != "" ? " " + otherUser.lastName : "") + ")" : ""} `}
             subheader={lastSeen}>
           </CardHeader>
         </Card>
