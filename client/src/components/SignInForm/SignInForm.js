@@ -68,8 +68,18 @@ export default function SignIn(props) {
   const [code, setCode] = useState(queryString.parse(window.location.search).code);
   const [isLoading, setIsLoading] = useState(false);
   const [isOAuthEnabled, setIsOAuthEnabled] = useState(true);
-  
+  const [githubOAuthLink, setGithubOAuthLink] = useState("")
+  useEffect(()=>{
+    const devLink = "https://github.com/login/oauth/authorize?client_id=cbea6799c7a92cf8030b";
+    const prodLink = "https://github.com/login/oauth/authorize?client_id=b6c57bc0f8bedf1f53a3"
 
+    if(process.env.NODE_ENV && process.env.NODE_ENV === "production") {
+      setGithubOAuthLink(prodLink)
+    }
+    else {
+      setGithubOAuthLink(devLink);
+    }
+  },[])
   
   useEffect(() => {
     if(authentication.error.valid) {
@@ -80,10 +90,7 @@ export default function SignIn(props) {
   }, [authentication]);
 
   useEffect(() => {
-    // if (queryString.parse(location.search).code)
-    //   setCode(queryString.parse(location.search).code);
-    // else 
-    //   setCode("");
+    console.log("React env:", process.env.NODE_ENV);
     if(code && code != ""){
       console.log("code =", code);
       const user = {code: code};
@@ -169,7 +176,7 @@ export default function SignIn(props) {
           <Grid Container>
             <IconButton 
               aria-label="GitHub" 
-              href="https://github.com/login/oauth/authorize?client_id=cbea6799c7a92cf8030b">
+              href={githubOAuthLink}>
               <GitHubIcon 
                 fontSize="large"
               />
