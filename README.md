@@ -5,4 +5,4 @@ Using GitHub OAuth
 ## Real time one to one chatting 
 Select any of the users, start real time chatting.
 ## Feed Section (Under development phase)
-See other users activity on Feed section (under development phase).
+See other users activity on Feed section (under development phase)...
