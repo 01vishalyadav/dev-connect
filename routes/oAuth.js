@@ -47,7 +47,16 @@ router.get('/github/callback', async(req, res) => {
       }
       req.body.user = user;
       // check if such user exists
-      user = await User.findOne({githubId: req.body.user.githubId});
+      try {
+        user = await User.findOne({githubId: req.body.user.githubId});
+      }
+      catch(err) {
+        if(err.constructor === MongooseError || "Operation `users.findOne()` buffering timed out after" in err) {
+          user = null;
+          // it will go to next else block so that new user will be created
+        }
+      }
+
       if(user) {
         // user exists
         console.log("**************************5**************");
